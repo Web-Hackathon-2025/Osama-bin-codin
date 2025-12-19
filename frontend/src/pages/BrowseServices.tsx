@@ -49,6 +49,7 @@ const BrowseServices = () => {
     scheduledTime: "",
     address: "",
     estimatedHours: 1,
+    paymentMethod: "cash",
   });
   const [bookingLoading, setBookingLoading] = useState(false);
 
@@ -111,35 +112,57 @@ const BrowseServices = () => {
           street: bookingData.address,
         },
         estimatedHours: bookingData.estimatedHours,
-        paymentMethod: "stripe",
+        paymentMethod: bookingData.paymentMethod,
       });
 
-      const booking = bookingResponse.data.data;
+      const booking = bookingResponse.data.data || bookingResponse.data.booking;
 
-      // Get Stripe config
-      const configResponse = await bookingAPI.getStripeConfig();
-      const { publishableKey } = configResponse.data;
-
-      // Initialize Stripe
-      const stripe = await loadStripe(publishableKey);
-      if (!stripe) {
-        throw new Error("Failed to initialize Stripe");
+      // If cash payment, just show success and redirect
+      if (bookingData.paymentMethod === "cash") {
+        alert(
+          "Booking created successfully! Payment will be collected in cash."
+        );
+        setShowBookingModal(false);
+        setBookingData({
+          serviceCategory: "",
+          description: "",
+          scheduledDate: "",
+          scheduledTime: "",
+          address: "",
+          estimatedHours: 1,
+          paymentMethod: "cash",
+        });
+        window.location.href = "/customer/bookings";
+        return;
       }
 
-      // Create payment intent
-      const paymentResponse = await bookingAPI.confirmPayment(booking._id);
-      const { clientSecret } = paymentResponse.data;
+      // Handle Stripe payment
+      if (bookingData.paymentMethod === "stripe") {
+        // Get Stripe config
+        const configResponse = await bookingAPI.getStripeConfig();
+        const { publishableKey } = configResponse.data;
 
-      // Redirect to Stripe Checkout or Payment
-      const { error } = await stripe.confirmPayment({
-        clientSecret,
-        confirmParams: {
-          return_url: `${window.location.origin}/customer/bookings`,
-        },
-      });
+        // Initialize Stripe
+        const stripe = await loadStripe(publishableKey);
+        if (!stripe) {
+          throw new Error("Failed to initialize Stripe");
+        }
 
-      if (error) {
-        alert(error.message);
+        // Create payment intent
+        const paymentResponse = await bookingAPI.confirmPayment(booking._id);
+        const { clientSecret } = paymentResponse.data;
+
+        // Redirect to Stripe Checkout or Payment
+        const { error } = await stripe.confirmPayment({
+          clientSecret,
+          confirmParams: {
+            return_url: `${window.location.origin}/customer/bookings`,
+          },
+        });
+
+        if (error) {
+          alert(error.message);
+        }
       }
     } catch (error: any) {
       console.error("Error creating booking:", error);
@@ -457,6 +480,60 @@ const BrowseServices = () => {
                   </p>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Payment Method
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="cash"
+                        checked={bookingData.paymentMethod === "cash"}
+                        onChange={(e) =>
+                          setBookingData({
+                            ...bookingData,
+                            paymentMethod: e.target.value,
+                          })
+                        }
+                        className="mr-3"
+                      />
+                      <div>
+                        <div className="font-medium text-slate-900">
+                          Cash Payment
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          Pay in cash when service is completed
+                        </div>
+                      </div>
+                    </label>
+                    <label className="flex items-center p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="stripe"
+                        checked={bookingData.paymentMethod === "stripe"}
+                        onChange={(e) =>
+                          setBookingData({
+                            ...bookingData,
+                            paymentMethod: e.target.value,
+                          })
+                        }
+                        className="mr-3"
+                      />
+                      <div>
+                        <div className="font-medium text-slate-900">
+                          Online Payment (Stripe)
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          Pay securely with credit/debit card
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
@@ -471,7 +548,11 @@ const BrowseServices = () => {
                     className="flex-1 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors disabled:bg-slate-300"
                     disabled={bookingLoading}
                   >
-                    {bookingLoading ? "Processing..." : "Book & Pay"}
+                    {bookingLoading
+                      ? "Processing..."
+                      : bookingData.paymentMethod === "cash"
+                      ? "Book Service"
+                      : "Book & Pay Now"}
                   </button>
                 </div>
               </form>

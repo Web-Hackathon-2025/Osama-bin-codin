@@ -77,13 +77,24 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // FORCE IPv4 binding to fix Windows issue
-httpServer.listen(PORT, '0.0.0.0', () => {
+const server = httpServer.listen(PORT, '0.0.0.0', () => {
+  const address = server.address();
   console.log(`\n${'='.repeat(60)}`);
   console.log(`✅ SERVER IS RUNNING!`);
   console.log(`${'='.repeat(60)}`);
   console.log(`🌐 URL: http://localhost:${PORT}`);
   console.log(`🌐 IP: http://0.0.0.0:${PORT}`);
+  console.log(`📡 Actual binding: ${JSON.stringify(address)}`);
   console.log(`🔌 WebSocket: Ready`);
   console.log(`📡 MongoDB: Connected`);
   console.log(`${'='.repeat(60)}\n`);
+});
+
+server.on('error', (error) => {
+  console.error('\n❌❌❌ SERVER ERROR ❌❌❌');
+  console.error(error);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use!`);
+  }
+  process.exit(1);
 });

@@ -21,6 +21,8 @@ import ProviderProfile from "./pages/ProviderProfile";
 import RequestService from "./pages/RequestService";
 import CustomerBookings from "./pages/CustomerBookings";
 import Chat from "./pages/Chat";
+import WebSocketChat from "./pages/WebSocketChat";
+import ChatDemo from "./pages/ChatDemo";
 import Review from "./pages/Review";
 import ProviderDashboard from "./pages/ProviderDashboard";
 import ManageProfile from "./pages/ManageProfile";
@@ -49,6 +51,8 @@ function App() {
                 />
                 <Route path="/browse" element={<BrowseServices />} />
                 <Route path="/provider/:id" element={<ProviderProfile />} />
+                <Route path="/websocket-chat" element={<WebSocketChat />} />
+                <Route path="/chat-demo" element={<ChatDemo />} />
 
                 {/* Customer Routes */}
                 <Route

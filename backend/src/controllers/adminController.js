@@ -152,6 +152,54 @@ export const updateUserStatus = async (req, res) => {
   }
 };
 
+// @desc    Update user details
+// @route   PUT /api/admin/users/:id
+// @access  Private (Admin)
+export const updateUser = async (req, res) => {
+  try {
+    const { name, email, phone, role } = req.body;
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Prevent admin from changing their own role
+    if (
+      user._id.toString() === req.user._id.toString() &&
+      role &&
+      role !== user.role
+    ) {
+      return res.status(400).json({ message: "Cannot change your own role" });
+    }
+
+    // Check if email is already taken by another user
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+    }
+
+    // Update fields
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (phone !== undefined) user.phone = phone;
+    if (role) user.role = role;
+
+    await user.save();
+
+    res.json({
+      message: "User updated successfully",
+      user: await User.findById(user._id).select("-password"),
+    });
+  } catch (error) {
+    console.error("Update user error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Delete user
 // @route   DELETE /api/admin/users/:id
 // @access  Private (Admin)

@@ -4,6 +4,7 @@ import {
   getPendingWorkers,
   updateWorkerApproval,
   updateUserStatus,
+  updateUser,
   deleteUser,
   getDashboardStats,
   createJobCategory,
@@ -24,6 +25,7 @@ router.use(protect, authorize("admin"));
 
 // User management
 router.get("/users", getAllUsers);
+router.put("/users/:id", updateUser);
 router.put("/users/:id/status", updateUserStatus);
 router.delete("/users/:id", deleteUser);
 

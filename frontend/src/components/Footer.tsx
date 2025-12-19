@@ -4,13 +4,13 @@ import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'luc
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-slate-200">
+    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-gradient-to-br from-primary-600 to-purple-600 text-white font-bold text-2xl px-3 py-1.5 rounded-xl shadow-lg">K</div>
+              <div className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white font-bold text-2xl px-3 py-1.5 rounded-xl shadow-lg">K</div>
               <span className="text-2xl font-bold text-white">Karigar</span>
             </div>
             <p className="text-sm text-slate-300 mb-6 leading-relaxed">
@@ -20,7 +20,7 @@ const Footer: React.FC = () => {
               <a href="#" className="p-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl transition-all transform hover:scale-110 shadow-lg">
                 <Facebook size={20} className="text-white" />
               </a>
-              <a href="#" className="p-2.5 bg-purple-600 hover:bg-purple-700 rounded-xl transition-all transform hover:scale-110 shadow-lg">
+              <a href="#" className="p-2.5 bg-yellow-600 hover:bg-yellow-700 rounded-xl transition-all transform hover:scale-110 shadow-lg">
                 <Twitter size={20} className="text-white" />
               </a>
               <a href="#" className="p-2.5 bg-orange-600 hover:bg-orange-700 rounded-xl transition-all transform hover:scale-110 shadow-lg">
@@ -42,7 +42,7 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/" className="hover:text-purple-400 transition-all hover:translate-x-2 inline-block">
+                <Link to="/" className="hover:text-yellow-400 transition-all hover:translate-x-2 inline-block">
                   → How It Works
                 </Link>
               </li>
@@ -74,7 +74,7 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-purple-400 transition-all hover:translate-x-2 inline-block">
+                <a href="#" className="hover:text-yellow-400 transition-all hover:translate-x-2 inline-block">
                   🧹 Cleaning
                 </a>
               </li>
@@ -97,7 +97,7 @@ const Footer: React.FC = () => {
                 <span className="text-sm group-hover:text-white transition-colors">123 Service Street, Bangalore, Karnataka 560001</span>
               </li>
               <li className="flex items-center space-x-3 group">
-                <div className="p-2 bg-purple-600 rounded-lg">
+                <div className="p-2 bg-yellow-600 rounded-lg">
                   <Phone size={18} className="text-white flex-shrink-0" />
                 </div>
                 <span className="text-sm group-hover:text-white transition-colors">+91 98765 00000</span>
@@ -112,9 +112,9 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-t-2 border-purple-800 mt-12 pt-8 text-center">
+        <div className="border-t-2 border-gray-700 mt-12 pt-8 text-center">
           <p className="text-sm text-slate-400">
-            &copy; 2025 <span className="text-white font-bold">Karigar</span>. All rights reserved. | <a href="#" className="hover:text-purple-400 transition-colors">Privacy Policy</a> | <a href="#" className="hover:text-orange-400 transition-colors">Terms of Service</a>
+            &copy; 2025 <span className="text-white font-bold">Karigar</span>. All rights reserved. | <a href="#" className="hover:text-yellow-400 transition-colors">Privacy Policy</a> | <a href="#" className="hover:text-orange-400 transition-colors">Terms of Service</a>
           </p>
         </div>
       </div>

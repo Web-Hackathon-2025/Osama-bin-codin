@@ -204,13 +204,17 @@ async function handleAccountUpdated(account) {
 
   try {
     // Find worker with this Stripe account
-    const worker = await User.findOne({ stripeAccountId: account.id });
+    const worker = await User.findOne({
+      "workerProfile.stripeAccountId": account.id,
+    });
 
     if (worker) {
+      console.log(`Found worker: ${worker.name} (${worker.email})`);
+
       // Update worker's Stripe account status
-      worker.stripeDetailsSubmitted = account.details_submitted;
-      worker.stripeChargesEnabled = account.charges_enabled;
-      worker.stripePayoutsEnabled = account.payouts_enabled;
+      worker.workerProfile.stripeDetailsSubmitted = account.details_submitted;
+      worker.workerProfile.stripeChargesEnabled = account.charges_enabled;
+      worker.workerProfile.stripePayoutsEnabled = account.payouts_enabled;
 
       // Consider onboarding complete if all required info is submitted
       if (
@@ -218,11 +222,18 @@ async function handleAccountUpdated(account) {
         account.charges_enabled &&
         account.payouts_enabled
       ) {
-        worker.stripeOnboardingComplete = true;
+        worker.workerProfile.stripeOnboardingComplete = true;
         console.log(`✅ Worker ${worker.name} completed Stripe onboarding`);
+      } else {
+        console.log(
+          `⏳ Stripe status - Details: ${account.details_submitted}, Charges: ${account.charges_enabled}, Payouts: ${account.payouts_enabled}`
+        );
       }
 
       await worker.save();
+      console.log(`💾 Worker profile updated successfully`);
+    } else {
+      console.log(`⚠️  No worker found with Stripe account ID: ${account.id}`);
     }
   } catch (error) {
     console.error("Error handling account update:", error);
