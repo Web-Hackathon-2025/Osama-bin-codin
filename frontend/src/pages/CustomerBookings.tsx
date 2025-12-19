@@ -79,9 +79,7 @@ const CustomerBookings = () => {
   };
 
   const filteredBookings =
-    filter === "all"
-      ? bookings
-      : bookings.filter((b) => b.status === filter);
+    filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,21 +118,26 @@ const CustomerBookings = () => {
 
         {/* Filter Tabs */}
         <div className="mb-6 flex flex-wrap gap-2">
-          {["all", "pending", "accepted", "in-progress", "completed", "cancelled"].map(
-            (status) => (
-              <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`px-4 py-2 rounded-lg capitalize transition-colors ${
-                  filter === status
-                    ? "bg-slate-900 text-white"
-                    : "bg-white text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                {status}
-              </button>
-            )
-          )}
+          {[
+            "all",
+            "pending",
+            "accepted",
+            "in-progress",
+            "completed",
+            "cancelled",
+          ].map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilter(status)}
+              className={`px-4 py-2 rounded-lg capitalize transition-colors ${
+                filter === status
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              {status}
+            </button>
+          ))}
         </div>
 
         {/* Bookings List */}
@@ -190,7 +193,8 @@ const CustomerBookings = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
-                  {booking.status === "accepted" || booking.status === "in-progress" ? (
+                  {booking.status === "accepted" ||
+                  booking.status === "in-progress" ? (
                     <button
                       onClick={() => navigate(`/chat/${booking._id}`)}
                       className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
