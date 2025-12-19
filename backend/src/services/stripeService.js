@@ -142,6 +142,77 @@ export const getPublishableKey = () => {
   return process.env.STRIPE_PUBLISHABLE_KEY;
 };
 
+/**
+ * Create a Stripe Checkout Session for Connect payment
+ * @param {Number} amount - Amount in dollars
+ * @param {String} connectedAccountId - Worker's Stripe account ID
+ * @param {Number} platformFeePercent - Platform fee percentage
+ * @param {Object} metadata - Additional metadata
+ * @param {String} successUrl - URL to redirect after success
+ * @param {String} cancelUrl - URL to redirect after cancel
+ * @returns {Object} Checkout session object
+ */
+export const createConnectCheckoutSession = async (
+  amount,
+  connectedAccountId,
+  platformFeePercent = 10,
+  metadata = {},
+  successUrl,
+  cancelUrl
+) => {
+  try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured.");
+    }
+
+    // Calculate platform fee
+    const platformFee = (amount * platformFeePercent) / 100;
+    const workerAmount = amount - platformFee;
+    const amountInCents = Math.round(amount * 100);
+    const platformFeeInCents = Math.round(platformFee * 100);
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Service Booking",
+              description:
+                metadata.serviceCategory || "Service booking payment",
+            },
+            unit_amount: amountInCents,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      payment_intent_data: {
+        application_fee_amount: platformFeeInCents,
+        transfer_data: {
+          destination: connectedAccountId,
+        },
+        metadata: metadata,
+      },
+      metadata: metadata,
+    });
+
+    return {
+      success: true,
+      sessionId: session.id,
+      url: session.url,
+      platformFee,
+      workerAmount,
+    };
+  } catch (error) {
+    console.error("Create Checkout Session error:", error);
+    throw new Error(error.message);
+  }
+};
+
 // ============ STRIPE CONNECT FUNCTIONS ============
 
 /**

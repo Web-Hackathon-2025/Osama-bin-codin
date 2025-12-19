@@ -50,6 +50,11 @@ export const handleStripeWebhook = async (req, res) => {
   try {
     // Handle the event
     switch (event.type) {
+      // Checkout Session Events
+      case "checkout.session.completed":
+        await handleCheckoutSessionCompleted(event.data.object);
+        break;
+
       // Payment Intent Events
       case "payment_intent.succeeded":
         await handlePaymentIntentSucceeded(event.data.object);
@@ -113,6 +118,56 @@ export const handleStripeWebhook = async (req, res) => {
 // ============================================
 // WEBHOOK EVENT HANDLERS
 // ============================================
+
+async function handleCheckoutSessionCompleted(session) {
+  console.log("💳 Checkout session completed:", session.id);
+
+  try {
+    // Find booking by session ID
+    const booking = await Booking.findOne({
+      stripeSessionId: session.id,
+    })
+      .populate("worker", "name email")
+      .populate("customer", "name email");
+
+    if (!booking) {
+      console.log("❌ No booking found for session:", session.id);
+      return;
+    }
+
+    console.log(
+      "📦 Found booking:",
+      booking._id,
+      "Status before:",
+      booking.paymentStatus
+    );
+
+    // Get the payment intent from the session
+    const paymentIntentId = session.payment_intent;
+
+    // Update booking payment status
+    booking.paymentStatus = "paid";
+    booking.isPaid = true;
+    booking.paidAt = new Date();
+    booking.paymentIntentId = paymentIntentId;
+    await booking.save();
+
+    console.log(
+      `✅ Booking ${booking._id} payment updated to: ${booking.paymentStatus}, isPaid: ${booking.isPaid}`
+    );
+
+    // Send notification to worker
+    if (booking.worker && booking.customer) {
+      await notifyPaymentReceived(
+        booking.worker._id,
+        booking.customer._id,
+        booking._id
+      );
+    }
+  } catch (error) {
+    console.error("❌ Error handling checkout session completed:", error);
+  }
+}
 
 async function handlePaymentIntentSucceeded(paymentIntent) {
   console.log("💰 Payment succeeded:", paymentIntent.id);
