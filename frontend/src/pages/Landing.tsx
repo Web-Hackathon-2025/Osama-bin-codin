@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, MapPin, Wrench, Zap, Sparkles, Hammer, PaintBucket, GraduationCap, Wind, Bug, CheckCircle, Users, Clock } from 'lucide-react';
 import servicesData from '../data/services.json';
+import ChatBox from '../components/ChatBox';
 
 const iconMap: { [key: string]: React.ElementType } = {
   wrench: Wrench,
@@ -55,10 +56,10 @@ const Landing: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-600 via-purple-600 to-primary-700 text-white py-24 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-24 overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
           <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
@@ -81,19 +82,19 @@ const Landing: React.FC = () => {
             <form onSubmit={handleSearch} className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-8 border border-white/20">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="relative group">
-                  <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-500 group-focus-within:text-purple-600 transition-colors" size={22} />
+                  <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-yellow-500 group-focus-within:text-yellow-600 transition-colors" size={22} />
                   <input
                     type="text"
                     placeholder="Enter your location"
                     value={searchLocation}
                     onChange={(e) => setSearchLocation(e.target.value)}
-                    className="w-full pl-12 pr-32 py-4 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-slate-900 font-medium transition-all"
+                    className="w-full pl-12 pr-32 py-4 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-slate-900 font-medium transition-all"
                   />
                   <button
                     type="button"
                     onClick={handleGetCurrentLocation}
                     disabled={isLoadingLocation}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-sm rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white text-sm rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoadingLocation ? '⏳' : '📍'} {isLoadingLocation ? 'Loading...' : 'Use Current'}
                   </button>
@@ -124,10 +125,10 @@ const Landing: React.FC = () => {
       <section className="py-20 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold mb-4">
+            <span className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold mb-4">
               ⭐ Popular Services
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-600 via-purple-600 to-primary-700 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-600 via-yellow-600 to-primary-700 bg-clip-text text-transparent mb-4">
               Popular Service Categories
             </h2>
             <p className="text-xl text-slate-600">
@@ -143,7 +144,7 @@ const Landing: React.FC = () => {
                 <Link
                   key={service.id}
                   to="/browse"
-                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-purple-200 group transform hover:-translate-y-2"
+                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-yellow-300 group transform hover:-translate-y-2"
                 >
                   <div className="relative h-40 overflow-hidden">
                     <img 
@@ -152,7 +153,7 @@ const Landing: React.FC = () => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <div className="absolute bottom-3 left-3 bg-gradient-to-br from-primary-600 to-purple-600 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="absolute bottom-3 left-3 bg-gradient-to-br from-yellow-500 to-orange-500 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg">
                       <Icon className="text-white" size={24} />
                     </div>
                   </div>
@@ -174,7 +175,7 @@ const Landing: React.FC = () => {
             <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-4">
               📋 Simple Process
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-600 via-purple-600 to-primary-700 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-600 via-yellow-600 to-primary-700 bg-clip-text text-transparent mb-4">
               How It Works
             </h2>
             <p className="text-xl text-slate-600">
@@ -185,14 +186,14 @@ const Landing: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="text-center group">
               <div className="relative inline-block mb-8">
-                <div className="bg-gradient-to-br from-primary-600 to-purple-600 text-white w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform">
+                <div className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform">
                   1
                 </div>
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                   ✓
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-blue-100 to-purple-100 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
+              <div className="bg-gradient-to-br from-yellow-100 to-orange-100 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
                 <Search className="text-blue-600" size={56} />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-4">Search & Browse</h3>
@@ -203,15 +204,15 @@ const Landing: React.FC = () => {
 
             <div className="text-center group">
               <div className="relative inline-block mb-8">
-                <div className="bg-gradient-to-br from-purple-600 to-pink-600 text-white w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform">
+                <div className="bg-gradient-to-br from-orange-500 to-red-500 text-white w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform">
                   2
                 </div>
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                   ✓
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-purple-100 to-pink-100 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                <Users className="text-purple-600" size={56} />
+              <div className="bg-gradient-to-br from-orange-100 to-red-100 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                <Users className="text-orange-600" size={56} />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-4">Request Service</h3>
               <p className="text-slate-600 text-lg leading-relaxed">
@@ -247,7 +248,7 @@ const Landing: React.FC = () => {
             <span className="inline-block px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-semibold mb-4">
               ⚡ Our Advantages
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-600 via-purple-600 to-primary-700 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-600 via-yellow-600 to-primary-700 bg-clip-text text-transparent mb-4">
               Why Choose Karigar?
             </h2>
           </div>
@@ -274,7 +275,7 @@ const Landing: React.FC = () => {
             </div>
 
             <div className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border-t-4 border-accent-500 group hover:-translate-y-2">
-              <div className="bg-gradient-to-br from-accent-100 to-purple-200 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="bg-gradient-to-br from-accent-100 to-yellow-200 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Users className="text-accent-600" size={40} />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-4">Trusted Community</h3>
@@ -287,10 +288,10 @@ const Landing: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-primary-600 via-purple-600 to-primary-700 text-white relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
         </div>
         
@@ -337,8 +338,18 @@ const Landing: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Floating Chat Widget */}
+      <ChatBox 
+        serverUrl="http://localhost:8080"
+        position="bottom-right"
+        theme="light"
+        autoConnect={true}
+      />
     </div>
   );
 };
 
 export default Landing;
+
+
