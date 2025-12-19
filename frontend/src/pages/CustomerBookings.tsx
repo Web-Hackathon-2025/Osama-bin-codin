@@ -41,9 +41,10 @@ const CustomerBookings = () => {
     try {
       setLoading(true);
       const response = await bookingAPI.getMyBookings();
-      setBookings(response.data.data);
+      setBookings(response.data.data || []);
     } catch (error) {
       console.error("Error fetching bookings:", error);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
@@ -79,7 +80,9 @@ const CustomerBookings = () => {
   };
 
   const filteredBookings =
-    filter === "all" ? bookings : bookings.filter((b) => b.status === filter);
+    filter === "all"
+      ? bookings
+      : (bookings || []).filter((b) => b.status === filter);
 
   const getStatusColor = (status: string) => {
     switch (status) {

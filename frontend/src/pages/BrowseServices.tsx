@@ -13,8 +13,8 @@ interface Worker {
     skills: string[];
     availability: string;
     serviceAreas: string[];
-    averageRating: number;
-    totalReviews: number;
+    rating?: number;
+    totalJobs?: number;
     bio?: string;
   };
 }
@@ -58,11 +58,11 @@ const BrowseServices = () => {
 
   useEffect(() => {
     if (selectedCategory === "All") {
-      setFilteredWorkers(workers);
+      setFilteredWorkers(workers || []);
     } else {
       setFilteredWorkers(
-        workers.filter((w) =>
-          w.workerProfile.jobCategories.includes(selectedCategory)
+        (workers || []).filter((w) =>
+          w.workerProfile?.jobCategories?.includes(selectedCategory)
         )
       );
     }
@@ -72,10 +72,12 @@ const BrowseServices = () => {
     try {
       setLoading(true);
       const response = await workerAPI.getWorkers({ isApproved: true });
-      setWorkers(response.data.data);
-      setFilteredWorkers(response.data.data);
+      setWorkers(response.data.data || []);
+      setFilteredWorkers(response.data.data || []);
     } catch (error) {
       console.error("Error fetching workers:", error);
+      setWorkers([]);
+      setFilteredWorkers([]);
     } finally {
       setLoading(false);
     }
@@ -215,8 +217,8 @@ const BrowseServices = () => {
                     <div className="flex items-center mt-1">
                       <span className="text-yellow-500">★</span>
                       <span className="ml-1 text-sm text-slate-600">
-                        {worker.workerProfile.averageRating.toFixed(1)} (
-                        {worker.workerProfile.totalReviews} reviews)
+                        {(worker.workerProfile.rating || 0).toFixed(1)} (
+                        {worker.workerProfile.totalJobs || 0} reviews)
                       </span>
                     </div>
                   </div>
