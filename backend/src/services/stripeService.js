@@ -1,13 +1,15 @@
 import Stripe from "stripe";
+import dotenv from "dotenv";
 
-// Initialize Stripe with secret key (only if key is provided)
-let stripe;
-if (
-  process.env.STRIPE_SECRET_KEY &&
-  process.env.STRIPE_SECRET_KEY !== "sk_test_your_stripe_secret_key_here"
-) {
-  stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-}
+// Load environment variables
+dotenv.config();
+
+// Initialize Stripe with secret key
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
+
+console.log("Stripe initialized:", !!stripe);
 
 /**
  * Create a Stripe payment intent for booking

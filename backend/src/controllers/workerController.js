@@ -121,8 +121,9 @@ export const getAllWorkers = async (req, res) => {
       .sort({ "workerProfile.rating": -1, createdAt: -1 });
 
     res.json({
+      message: "Workers retrieved successfully",
       count: workers.length,
-      workers,
+      data: workers,
     });
   } catch (error) {
     console.error("Get all workers error:", error);

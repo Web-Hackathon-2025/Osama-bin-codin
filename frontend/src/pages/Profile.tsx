@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { profileAPI } from "../services/api";
+import api from "../services/api";
 import ImageUpload from "../components/ImageUpload";
 
 export default function Profile() {
@@ -37,7 +37,7 @@ export default function Profile() {
     setLoading(true);
 
     try {
-      const response = await profileAPI.updateProfile(formData);
+      const response = await api.put("/profile", formData);
       setUser(response.data.user);
       setSuccess("Profile updated successfully!");
       setEditing(false);

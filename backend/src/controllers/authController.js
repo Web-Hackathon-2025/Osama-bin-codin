@@ -415,7 +415,21 @@ export const changePassword = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
-    res.json(user);
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      avatar: user.avatar,
+      bio: user.bio,
+      role: user.role,
+      isVerified: user.isVerified,
+      isApproved: user.isApproved,
+      isActive: user.isActive,
+      workerProfile: user.role === "worker" ? user.workerProfile : undefined,
+      stripeAccountId: user.stripeAccountId,
+      stripeOnboardingComplete: user.stripeOnboardingComplete,
+    });
   } catch (error) {
     console.error("Get me error:", error);
     res.status(500).json({ message: error.message });

@@ -1,6 +1,19 @@
 @import "tailwindcss";
 
-/* Custom Scrollbar */
+/* Monochromatic Theme Variables */
+:root {
+  --color-primary: #64748b;
+  --color-primary-dark: #475569;
+  --color-primary-darker: #334155;
+  --color-primary-darkest: #1e293b;
+  --color-bg-light: #f8fafc;
+  --color-bg: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+}
+
+/* Custom Scrollbar - Monochromatic */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -11,12 +24,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #94a3b8;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #64748b;
 }
 
 /* Smooth Scrolling */
@@ -24,9 +37,9 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Custom Focus Styles */
+/* Custom Focus Styles - Monochromatic */
 *:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #475569;
   outline-offset: 2px;
 }
 
