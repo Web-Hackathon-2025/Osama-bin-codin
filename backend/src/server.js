@@ -16,7 +16,12 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import { authenticateSocket } from "./middleware/socketAuthMiddleware.js";
 import { initializeSocket } from "./sockets/chatSocket.js";
-import { apiLimiter, authLimiter, createAccountLimiter, chatLimiter } from "./middleware/rateLimiter.js";
+import {
+  apiLimiter,
+  authLimiter,
+  createAccountLimiter,
+  chatLimiter,
+} from "./middleware/rateLimiter.js";
 
 // Load environment variables
 dotenv.config();
@@ -65,10 +70,10 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/examples", exampleRoutes);
 app.use("/api/workers", workerRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/bookings", Limiter, chatbookingRoutes);
+app.use("/api/bookings", bookingRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/chat", chatRoutes);
+app.use("/api/chat", chatLimiter, chatRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -81,23 +86,23 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // FORCE IPv4 binding to fix Windows issue
-const server = httpServer.listen(PORT, '0.0.0.0', () => {
+const server = httpServer.listen(PORT, "0.0.0.0", () => {
   const address = server.address();
-  console.log(`\n${'='.repeat(60)}`);
+  console.log(`\n${"=".repeat(60)}`);
   console.log(`✅ SERVER IS RUNNING!`);
-  console.log(`${'='.repeat(60)}`);
+  console.log(`${"=".repeat(60)}`);
   console.log(`🌐 URL: http://localhost:${PORT}`);
   console.log(`🌐 IP: http://0.0.0.0:${PORT}`);
   console.log(`📡 Actual binding: ${JSON.stringify(address)}`);
   console.log(`🔌 WebSocket: Ready`);
   console.log(`📡 MongoDB: Connected`);
-  console.log(`${'='.repeat(60)}\n`);
+  console.log(`${"=".repeat(60)}\n`);
 });
 
-server.on('error', (error) => {
-  console.error('\n❌❌❌ SERVER ERROR ❌❌❌');
+server.on("error", (error) => {
+  console.error("\n❌❌❌ SERVER ERROR ❌❌❌");
   console.error(error);
-  if (error.code === 'EADDRINUSE') {
+  if (error.code === "EADDRINUSE") {
     console.error(`Port ${PORT} is already in use!`);
   }
   process.exit(1);
