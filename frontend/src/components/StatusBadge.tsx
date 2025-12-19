@@ -14,33 +14,33 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' }) => {
         return {
           label: 'Requested',
           icon: Clock,
-          bgColor: 'bg-yellow-100',
-          textColor: 'text-yellow-800',
-          borderColor: 'border-yellow-200',
+          bgColor: 'bg-gradient-to-r from-warning-100 to-yellow-100',
+          textColor: 'text-warning-800',
+          borderColor: 'border-warning-300',
         };
       case 'confirmed':
         return {
           label: 'Confirmed',
           icon: CheckCircle,
-          bgColor: 'bg-green-100',
-          textColor: 'text-green-800',
-          borderColor: 'border-green-200',
+          bgColor: 'bg-gradient-to-r from-success-100 to-green-100',
+          textColor: 'text-success-800',
+          borderColor: 'border-success-300',
         };
       case 'completed':
         return {
           label: 'Completed',
           icon: CheckCircle,
-          bgColor: 'bg-blue-100',
-          textColor: 'text-blue-800',
-          borderColor: 'border-blue-200',
+          bgColor: 'bg-gradient-to-r from-primary-100 to-blue-100',
+          textColor: 'text-primary-800',
+          borderColor: 'border-primary-300',
         };
       case 'cancelled':
         return {
           label: 'Cancelled',
           icon: XCircle,
-          bgColor: 'bg-red-100',
-          textColor: 'text-red-800',
-          borderColor: 'border-red-200',
+          bgColor: 'bg-gradient-to-r from-danger-100 to-red-100',
+          textColor: 'text-danger-800',
+          borderColor: 'border-danger-300',
         };
       default:
         return {
@@ -48,7 +48,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' }) => {
           icon: AlertCircle,
           bgColor: 'bg-slate-100',
           textColor: 'text-slate-800',
-          borderColor: 'border-slate-200',
+          borderColor: 'border-slate-300',
         };
     }
   };
