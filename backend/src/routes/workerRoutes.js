@@ -5,6 +5,10 @@ import {
   getAllWorkers,
   getWorkerById,
   getWorkerStats,
+  createStripeAccount,
+  getStripeOnboardingLink,
+  getStripeAccountStatus,
+  getStripeDashboardLink,
 } from "../controllers/workerController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
@@ -18,5 +22,31 @@ router.get("/:id", getWorkerById);
 router.get("/profile/me", protect, authorize("worker"), getWorkerProfile);
 router.put("/profile/me", protect, authorize("worker"), updateWorkerProfile);
 router.get("/stats/me", protect, authorize("worker"), getWorkerStats);
+
+// Stripe Connect routes
+router.post(
+  "/stripe/create-account",
+  protect,
+  authorize("worker"),
+  createStripeAccount
+);
+router.get(
+  "/stripe/onboarding-link",
+  protect,
+  authorize("worker"),
+  getStripeOnboardingLink
+);
+router.get(
+  "/stripe/status",
+  protect,
+  authorize("worker"),
+  getStripeAccountStatus
+);
+router.get(
+  "/stripe/dashboard",
+  protect,
+  authorize("worker"),
+  getStripeDashboardLink
+);
 
 export default router;

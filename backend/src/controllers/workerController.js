@@ -1,4 +1,10 @@
 import User from "../models/User.js";
+import {
+  createConnectAccount,
+  createAccountLink,
+  retrieveConnectAccount,
+  createLoginLink,
+} from "../services/stripeService.js";
 
 // @desc    Get worker profile
 // @route   GET /api/workers/profile
@@ -167,11 +173,168 @@ export const getWorkerStats = async (req, res) => {
       rating: worker.workerProfile.rating || 0,
       isApproved: worker.workerProfile.isApproved || false,
       joinedDate: worker.createdAt,
+      stripeOnboardingComplete:
+        worker.workerProfile.stripeOnboardingComplete || false,
     };
 
     res.json(stats);
   } catch (error) {
     console.error("Get worker stats error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Create Stripe Connect account for worker
+// @route   POST /api/workers/stripe/create-account
+// @access  Private (Worker)
+export const createStripeAccount = async (req, res) => {
+  try {
+    const worker = await User.findById(req.user._id);
+
+    if (worker.role !== "worker") {
+      return res.status(403).json({ message: "Not a worker account" });
+    }
+
+    // Check if already has account
+    if (worker.workerProfile.stripeAccountId) {
+      return res.status(400).json({
+        message: "Stripe account already exists",
+        accountId: worker.workerProfile.stripeAccountId,
+      });
+    }
+
+    // Create Stripe Connect account
+    const account = await createConnectAccount({
+      userId: worker._id.toString(),
+      email: worker.email,
+      name: worker.name,
+    });
+
+    // Save account ID to worker profile
+    worker.workerProfile.stripeAccountId = account.accountId;
+    await worker.save();
+
+    res.json({
+      message: "Stripe account created successfully",
+      accountId: account.accountId,
+    });
+  } catch (error) {
+    console.error("Create Stripe account error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get Stripe onboarding link
+// @route   GET /api/workers/stripe/onboarding-link
+// @access  Private (Worker)
+export const getStripeOnboardingLink = async (req, res) => {
+  try {
+    const worker = await User.findById(req.user._id);
+
+    if (worker.role !== "worker") {
+      return res.status(403).json({ message: "Not a worker account" });
+    }
+
+    if (!worker.workerProfile.stripeAccountId) {
+      return res.status(400).json({
+        message: "No Stripe account found. Please create one first.",
+      });
+    }
+
+    const returnUrl = `${process.env.FRONTEND_URL}/worker/stripe/return`;
+    const refreshUrl = `${process.env.FRONTEND_URL}/worker/stripe/refresh`;
+
+    const accountLink = await createAccountLink(
+      worker.workerProfile.stripeAccountId,
+      returnUrl,
+      refreshUrl
+    );
+
+    res.json({
+      url: accountLink.url,
+    });
+  } catch (error) {
+    console.error("Get onboarding link error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Check Stripe account status
+// @route   GET /api/workers/stripe/status
+// @access  Private (Worker)
+export const getStripeAccountStatus = async (req, res) => {
+  try {
+    const worker = await User.findById(req.user._id);
+
+    if (worker.role !== "worker") {
+      return res.status(403).json({ message: "Not a worker account" });
+    }
+
+    if (!worker.workerProfile.stripeAccountId) {
+      return res.json({
+        hasAccount: false,
+        message: "No Stripe account connected",
+      });
+    }
+
+    const accountDetails = await retrieveConnectAccount(
+      worker.workerProfile.stripeAccountId
+    );
+
+    // Update worker profile with latest status
+    worker.workerProfile.stripeDetailsSubmitted =
+      accountDetails.account.detailsSubmitted;
+    worker.workerProfile.stripeChargesEnabled =
+      accountDetails.account.chargesEnabled;
+    worker.workerProfile.stripePayoutsEnabled =
+      accountDetails.account.payoutsEnabled;
+    worker.workerProfile.stripeOnboardingComplete =
+      accountDetails.account.detailsSubmitted &&
+      accountDetails.account.chargesEnabled;
+
+    await worker.save();
+
+    res.json({
+      hasAccount: true,
+      accountId: worker.workerProfile.stripeAccountId,
+      detailsSubmitted: accountDetails.account.detailsSubmitted,
+      chargesEnabled: accountDetails.account.chargesEnabled,
+      payoutsEnabled: accountDetails.account.payoutsEnabled,
+      onboardingComplete: worker.workerProfile.stripeOnboardingComplete,
+      requirements: accountDetails.account.requirements,
+    });
+  } catch (error) {
+    console.error("Get Stripe status error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get Stripe dashboard link
+// @route   GET /api/workers/stripe/dashboard
+// @access  Private (Worker)
+export const getStripeDashboardLink = async (req, res) => {
+  try {
+    const worker = await User.findById(req.user._id);
+
+    if (worker.role !== "worker") {
+      return res.status(403).json({ message: "Not a worker account" });
+    }
+
+    if (!worker.workerProfile.stripeAccountId) {
+      return res.status(400).json({
+        message: "No Stripe account found.",
+      });
+    }
+
+    const loginLink = await createLoginLink(
+      worker.workerProfile.stripeAccountId
+    );
+
+    res.json({
+      url: loginLink.url,
+    });
+  } catch (error) {
+    console.error("Get dashboard link error:", error);
     res.status(500).json({ message: error.message });
   }
 };

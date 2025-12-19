@@ -139,3 +139,168 @@ export const confirmPaymentIntent = async (paymentIntentId) => {
 export const getPublishableKey = () => {
   return process.env.STRIPE_PUBLISHABLE_KEY;
 };
+
+// ============ STRIPE CONNECT FUNCTIONS ============
+
+/**
+ * Create a Stripe Connect account for worker
+ * @param {Object} workerData - Worker information
+ * @returns {Object} Stripe account object
+ */
+export const createConnectAccount = async (workerData) => {
+  try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured.");
+    }
+
+    const account = await stripe.accounts.create({
+      type: "express",
+      email: workerData.email,
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      business_type: "individual",
+      metadata: {
+        userId: workerData.userId,
+        name: workerData.name,
+      },
+    });
+
+    return {
+      success: true,
+      accountId: account.id,
+    };
+  } catch (error) {
+    console.error("Create Connect account error:", error);
+    throw new Error(error.message);
+  }
+};
+
+/**
+ * Create account link for Stripe Connect onboarding
+ * @param {String} accountId - Stripe account ID
+ * @param {String} returnUrl - URL to return after onboarding
+ * @param {String} refreshUrl - URL to refresh if expired
+ * @returns {Object} Account link object
+ */
+export const createAccountLink = async (accountId, returnUrl, refreshUrl) => {
+  try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured.");
+    }
+
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: refreshUrl,
+      return_url: returnUrl,
+      type: "account_onboarding",
+    });
+
+    return {
+      success: true,
+      url: accountLink.url,
+    };
+  } catch (error) {
+    console.error("Create account link error:", error);
+    throw new Error(error.message);
+  }
+};
+
+/**
+ * Retrieve Stripe Connect account details
+ * @param {String} accountId - Stripe account ID
+ * @returns {Object} Account details
+ */
+export const retrieveConnectAccount = async (accountId) => {
+  try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured.");
+    }
+
+    const account = await stripe.accounts.retrieve(accountId);
+    return {
+      success: true,
+      account: {
+        id: account.id,
+        detailsSubmitted: account.details_submitted,
+        chargesEnabled: account.charges_enabled,
+        payoutsEnabled: account.payouts_enabled,
+        requirements: account.requirements,
+      },
+    };
+  } catch (error) {
+    console.error("Retrieve Connect account error:", error);
+    throw new Error(error.message);
+  }
+};
+
+/**
+ * Create payment intent with Connect account (platform fee)
+ * @param {Number} amount - Amount in dollars
+ * @param {String} connectedAccountId - Worker's Stripe account ID
+ * @param {Number} platformFeePercent - Platform fee percentage (default 10%)
+ * @param {Object} metadata - Additional metadata
+ * @returns {Object} Payment intent object
+ */
+export const createConnectPaymentIntent = async (
+  amount,
+  connectedAccountId,
+  platformFeePercent = 10,
+  metadata = {}
+) => {
+  try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured.");
+    }
+
+    const amountInCents = Math.round(amount * 100);
+    const platformFee = Math.round((amountInCents * platformFeePercent) / 100);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: "usd",
+      application_fee_amount: platformFee,
+      transfer_data: {
+        destination: connectedAccountId,
+      },
+      metadata: metadata,
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+
+    return {
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      platformFee: platformFee / 100,
+      workerAmount: (amountInCents - platformFee) / 100,
+    };
+  } catch (error) {
+    console.error("Create Connect payment intent error:", error);
+    throw new Error(error.message);
+  }
+};
+
+/**
+ * Create login link for Stripe Express Dashboard
+ * @param {String} accountId - Stripe account ID
+ * @returns {Object} Login link object
+ */
+export const createLoginLink = async (accountId) => {
+  try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured.");
+    }
+
+    const loginLink = await stripe.accounts.createLoginLink(accountId);
+    return {
+      success: true,
+      url: loginLink.url,
+    };
+  } catch (error) {
+    console.error("Create login link error:", error);
+    throw new Error(error.message);
+  }
+};

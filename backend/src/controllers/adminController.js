@@ -1,6 +1,10 @@
 import User from "../models/User.js";
 import JobCategory from "../models/JobCategory.js";
 import Booking from "../models/Booking.js";
+import {
+  notifyWorkerApproved,
+  notifyWorkerRejected,
+} from "../services/notificationService.js";
 
 // @desc    Get all users with role filtering
 // @route   GET /api/admin/users
@@ -95,6 +99,13 @@ export const updateWorkerApproval = async (req, res) => {
 
     worker.workerProfile.isApproved = isApproved;
     await worker.save();
+
+    // Send notification to worker
+    if (isApproved) {
+      await notifyWorkerApproved(worker._id);
+    } else {
+      await notifyWorkerRejected(worker._id);
+    }
 
     res.json({
       message: `Worker ${isApproved ? "approved" : "rejected"} successfully`,
@@ -352,10 +363,18 @@ export const getPlatformBookingStats = async (req, res) => {
     const activeBookings = await Booking.countDocuments({
       status: { $in: ["accepted", "in-progress"] },
     });
+    const disputedBookings = await Booking.countDocuments({
+      status: "disputed",
+    });
 
     const totalRevenue = await Booking.aggregate([
       { $match: { isPaid: true } },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    ]);
+
+    const platformFeeRevenue = await Booking.aggregate([
+      { $match: { isPaid: true, platformFee: { $exists: true } } },
+      { $group: { _id: null, total: { $sum: "$platformFee" } } },
     ]);
 
     const revenueByCategory = await Booking.aggregate([
@@ -376,11 +395,73 @@ export const getPlatformBookingStats = async (req, res) => {
       completedBookings,
       cancelledBookings,
       activeBookings,
+      disputedBookings,
       totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
+      platformFeeRevenue:
+        platformFeeRevenue.length > 0 ? platformFeeRevenue[0].total : 0,
       revenueByCategory,
     });
   } catch (error) {
     console.error("Get platform booking stats error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all disputed bookings
+// @route   GET /api/admin/bookings/disputed
+// @access  Private (Admin)
+export const getDisputedBookings = async (req, res) => {
+  try {
+    const disputedBookings = await Booking.find({ status: "disputed" })
+      .populate("customer", "name email phone")
+      .populate("worker", "name email phone")
+      .populate("disputeDetails.reportedBy", "name email")
+      .sort({ "disputeDetails.reportedAt": -1 });
+
+    res.json({
+      count: disputedBookings.length,
+      bookings: disputedBookings,
+    });
+  } catch (error) {
+    console.error("Get disputed bookings error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Resolve a dispute
+// @route   PUT /api/admin/bookings/:id/resolve-dispute
+// @access  Private (Admin)
+export const resolveDispute = async (req, res) => {
+  try {
+    const { resolution, newStatus } = req.body;
+
+    if (!resolution) {
+      return res.status(400).json({ message: "Please provide a resolution" });
+    }
+
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.status !== "disputed") {
+      return res.status(400).json({ message: "Booking is not disputed" });
+    }
+
+    booking.disputeDetails.resolvedBy = req.user._id;
+    booking.disputeDetails.resolvedAt = new Date();
+    booking.disputeDetails.resolution = resolution;
+    booking.status = newStatus || "completed";
+
+    await booking.save();
+
+    res.json({
+      message: "Dispute resolved successfully",
+      booking,
+    });
+  } catch (error) {
+    console.error("Resolve dispute error:", error);
     res.status(500).json({ message: error.message });
   }
 };

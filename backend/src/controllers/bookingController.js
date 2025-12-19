@@ -2,11 +2,21 @@ import Booking from "../models/Booking.js";
 import User from "../models/User.js";
 import {
   createPaymentIntent,
+  createConnectPaymentIntent,
   cancelPaymentIntent,
   createRefund,
   retrievePaymentIntent,
   getPublishableKey,
 } from "../services/stripeService.js";
+import {
+  notifyBookingCreated,
+  notifyBookingAccepted,
+  notifyBookingRejected,
+  notifyBookingCancelled,
+  notifyBookingCompleted,
+  notifyPaymentReceived,
+  notifyReviewReceived,
+} from "../services/notificationService.js";
 
 // @desc    Create a new booking
 // @route   POST /api/bookings
@@ -77,15 +87,37 @@ export const createBooking = async (req, res) => {
 
     // Handle Stripe payment if payment method is stripe
     if (paymentMethod === "stripe") {
-      try {
-        const paymentIntent = await createPaymentIntent(totalAmount, "usd", {
-          customerId: req.user._id.toString(),
-          workerId: workerId,
-          serviceCategory,
+      // Check if worker has Stripe account set up
+      if (
+        !worker.workerProfile.stripeAccountId ||
+        !worker.workerProfile.stripeOnboardingComplete
+      ) {
+        return res.status(400).json({
+          message:
+            "Worker has not completed Stripe setup. Please choose cash payment or select another worker.",
         });
+      }
+
+      try {
+        // Use Stripe Connect to pay worker directly (10% platform fee)
+        const paymentIntent = await createConnectPaymentIntent(
+          totalAmount,
+          worker.workerProfile.stripeAccountId,
+          10, // 10% platform fee
+          {
+            customerId: req.user._id.toString(),
+            customerName: req.user.name,
+            workerId: workerId,
+            workerName: worker.name,
+            serviceCategory,
+            bookingDescription: description,
+          }
+        );
 
         bookingData.paymentIntentId = paymentIntent.paymentIntentId;
         bookingData.paymentStatus = "pending";
+        bookingData.platformFee = paymentIntent.platformFee;
+        bookingData.workerAmount = paymentIntent.workerAmount;
 
         const booking = await Booking.create(bookingData);
         await booking.populate(
@@ -93,11 +125,16 @@ export const createBooking = async (req, res) => {
           "name email phone avatar workerProfile"
         );
 
+        // Send notification to worker
+        await notifyBookingCreated(workerId, req.user._id, booking._id);
+
         return res.status(201).json({
           message: "Booking created successfully",
           booking,
           clientSecret: paymentIntent.clientSecret,
           requiresPayment: true,
+          platformFee: paymentIntent.platformFee,
+          workerAmount: paymentIntent.workerAmount,
         });
       } catch (error) {
         console.error("Stripe payment error:", error);
@@ -110,6 +147,9 @@ export const createBooking = async (req, res) => {
     // For cash or no payment method
     const booking = await Booking.create(bookingData);
     await booking.populate("worker", "name email phone avatar workerProfile");
+
+    // Send notification to worker
+    await notifyBookingCreated(workerId, req.user._id, booking._id);
 
     res.status(201).json({
       message: "Booking created successfully",
@@ -297,6 +337,21 @@ export const respondToBooking = async (req, res) => {
     await booking.populate("customer", "name email phone avatar");
     await booking.populate("worker", "name email phone avatar workerProfile");
 
+    // Send notification to customer
+    if (status === "accepted") {
+      await notifyBookingAccepted(
+        booking.customer._id,
+        req.user._id,
+        booking._id
+      );
+    } else if (status === "rejected") {
+      await notifyBookingRejected(
+        booking.customer._id,
+        req.user._id,
+        booking._id
+      );
+    }
+
     res.json({
       message: `Booking ${status} successfully`,
       booking,
@@ -343,6 +398,13 @@ export const updateBookingStatus = async (req, res) => {
       worker.workerProfile.completedJobs =
         (worker.workerProfile.completedJobs || 0) + 1;
       await worker.save();
+
+      // Notify customer that booking is completed
+      await notifyBookingCompleted(
+        booking.customer._id,
+        req.user._id,
+        booking._id
+      );
     }
 
     booking.status = status;
@@ -406,6 +468,10 @@ export const cancelBooking = async (req, res) => {
     await booking.save();
     await booking.populate("customer", "name email phone avatar");
     await booking.populate("worker", "name email phone avatar workerProfile");
+
+    // Notify the other party
+    const otherPartyId = isCustomer ? booking.worker._id : booking.customer._id;
+    await notifyBookingCancelled(otherPartyId, req.user._id, booking._id);
 
     res.json({
       message: "Booking cancelled successfully",
@@ -478,12 +544,77 @@ export const reviewBooking = async (req, res) => {
     await booking.populate("customer", "name email phone avatar");
     await booking.populate("worker", "name email phone avatar workerProfile");
 
+    // Notify worker about the review
+    await notifyReviewReceived(
+      booking.worker._id,
+      req.user._id,
+      booking._id,
+      score
+    );
+
     res.json({
       message: "Review submitted successfully",
       booking,
     });
   } catch (error) {
     console.error("Review booking error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Report dispute for booking
+// @route   PUT /api/bookings/:id/dispute
+// @access  Private
+export const reportDispute = async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a reason for the dispute" });
+    }
+
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Check if user is customer or worker
+    const isCustomer = booking.customer.toString() === req.user._id.toString();
+    const isWorker = booking.worker.toString() === req.user._id.toString();
+
+    if (!isCustomer && !isWorker) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (booking.status !== "completed") {
+      return res
+        .status(400)
+        .json({ message: "Can only dispute completed bookings" });
+    }
+
+    booking.status = "disputed";
+    if (!booking.disputeDetails) {
+      booking.disputeDetails = {};
+    }
+    booking.disputeDetails = {
+      reportedBy: req.user._id,
+      reportedAt: new Date(),
+      reason: reason,
+    };
+
+    await booking.save();
+    await booking.populate("customer", "name email phone avatar");
+    await booking.populate("worker", "name email phone avatar workerProfile");
+
+    res.json({
+      message: "Dispute reported successfully. Admin will review this case.",
+      booking,
+    });
+  } catch (error) {
+    console.error("Report dispute error:", error);
     res.status(500).json({ message: error.message });
   }
 };
