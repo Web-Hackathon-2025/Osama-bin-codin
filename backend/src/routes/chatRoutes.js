@@ -1,12 +1,14 @@
-import express from 'express';
+import express from "express";
 import {
   getConversations,
   getMessages,
   getUnreadCount,
   deleteMessage,
   searchMessages,
-} from '../controllers/chatController.js';
-import { protect } from '../middleware/authMiddleware.js';
+  getBookingMessages,
+  sendBookingMessage,
+} from "../controllers/chatController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -14,18 +16,25 @@ const router = express.Router();
 router.use(protect);
 
 // Get all conversations for logged-in user
-router.get('/conversations', getConversations);
+router.get("/conversations", getConversations);
 
 // Get messages between logged-in user and another user
-router.get('/messages/:otherUserId', getMessages);
+router.get("/messages/:otherUserId", getMessages);
 
 // Get unread message count
-router.get('/unread-count', getUnreadCount);
+router.get("/unread-count", getUnreadCount);
 
 // Search messages
-router.get('/search', searchMessages);
+router.get("/search", searchMessages);
 
 // Delete a message
-router.delete('/messages/:messageId', deleteMessage);
+router.delete("/messages/:messageId", deleteMessage);
+
+// Booking-based chat routes
+// Get messages for a specific booking
+router.get("/:bookingId/messages", getBookingMessages);
+
+// Send message for a specific booking
+router.post("/:bookingId/messages", sendBookingMessage);
 
 export default router;
