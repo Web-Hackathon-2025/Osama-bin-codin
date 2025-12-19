@@ -1,190 +1,314 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, User, Filter } from 'lucide-react';
-import bookingsData from '../data/bookings.json';
-import StatusBadge from '../components/StatusBadge';
-import type { Booking, BookingStatus } from '../types';
-import { useUser } from '../context/UserContext';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { bookingAPI } from "../services/api";
 
-const CustomerBookings: React.FC = () => {
-  const navigate = useNavigate();
-  const { userId } = useUser();
-  const [statusFilter, setStatusFilter] = React.useState<BookingStatus | 'all'>('all');
-
-  // Filter bookings for current customer
-  const userBookings = bookingsData.filter((b) => b.customerId === userId) as Booking[];
-
-  // Apply status filter
-  const filteredBookings = statusFilter === 'all' 
-    ? userBookings 
-    : userBookings.filter((b) => b.status === statusFilter);
-
-  // Sort by date (newest first)
-  const sortedBookings = [...filteredBookings].sort((a, b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-
-  const handleReview = (bookingId: string) => {
-    navigate(`/review/${bookingId}`);
+interface Booking {
+  _id: string;
+  workerId: {
+    _id: string;
+    name: string;
+    email: string;
   };
+  serviceCategory: string;
+  description: string;
+  scheduledDate: string;
+  address: string;
+  estimatedHours: number;
+  totalAmount: number;
+  status: string;
+  paymentStatus: string;
+  createdAt: string;
+  review?: {
+    rating: number;
+    comment: string;
+  };
+}
+
+const CustomerBookings = () => {
+  const navigate = useNavigate();
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [reviewData, setReviewData] = useState({ rating: 5, comment: "" });
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await bookingAPI.getMyBookings();
+      setBookings(response.data.data);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!confirm("Are you sure you want to cancel this booking?")) return;
+
+    try {
+      await bookingAPI.cancelBooking(bookingId, {
+        cancellationReason: "Customer requested cancellation",
+      });
+      alert("Booking cancelled successfully");
+      fetchBookings();
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Failed to cancel booking");
+    }
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+
+    try {
+      await bookingAPI.reviewBooking(selectedBooking._id, reviewData);
+      alert("Review submitted successfully!");
+      setShowReviewModal(false);
+      setReviewData({ rating: 5, comment: "" });
+      fetchBookings();
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Failed to submit review");
+    }
+  };
+
+  const filteredBookings =
+    filter === "all"
+      ? bookings
+      : bookings.filter((b) => b.status === filter);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "accepted":
+        return "bg-blue-100 text-blue-800";
+      case "in-progress":
+        return "bg-purple-100 text-purple-800";
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "rejected":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-slate-100 text-slate-800";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-slate-300 border-t-slate-900 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading bookings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">My Bookings</h1>
-          <p className="text-lg text-slate-600">
-            Track and manage your service requests
-          </p>
-        </div>
+        <h1 className="text-3xl font-bold text-slate-900 mb-8">My Bookings</h1>
 
-        {/* Status Filter */}
-        <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-8">
-          <div className="flex items-center space-x-2 mb-4">
-            <Filter size={20} className="text-slate-700" />
-            <h2 className="text-lg font-semibold text-slate-900">Filter by Status</h2>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setStatusFilter('requested')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === 'requested'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Requested
-            </button>
-            <button
-              onClick={() => setStatusFilter('confirmed')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === 'confirmed'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Confirmed
-            </button>
-            <button
-              onClick={() => setStatusFilter('completed')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === 'completed'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Completed
-            </button>
-            <button
-              onClick={() => setStatusFilter('cancelled')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === 'cancelled'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Cancelled
-            </button>
-          </div>
+        {/* Filter Tabs */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          {["all", "pending", "accepted", "in-progress", "completed", "cancelled"].map(
+            (status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-4 py-2 rounded-lg capitalize transition-colors ${
+                  filter === status
+                    ? "bg-slate-900 text-white"
+                    : "bg-white text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {status}
+              </button>
+            )
+          )}
         </div>
 
         {/* Bookings List */}
-        {sortedBookings.length > 0 ? (
+        {filteredBookings.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-lg">
+            <p className="text-slate-600">No bookings found</p>
+          </div>
+        ) : (
           <div className="space-y-4">
-            {sortedBookings.map((booking) => (
-              <div key={booking.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-xl font-semibold text-slate-900 mb-1">
-                          {booking.service}
-                        </h3>
-                        <p className="text-sm text-blue-600 font-medium">{booking.category}</p>
-                      </div>
-                      <StatusBadge status={booking.status} />
-                    </div>
+            {filteredBookings.map((booking) => (
+              <div
+                key={booking._id}
+                className="bg-white rounded-lg shadow-sm p-6"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-slate-900">
+                      {booking.serviceCategory}
+                    </h3>
+                    <p className="text-sm text-slate-600">
+                      Provider: {booking.workerId.name}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Scheduled:{" "}
+                      {new Date(booking.scheduledDate).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                        booking.status
+                      )}`}
+                    >
+                      {booking.status}
+                    </span>
+                    <p className="mt-2 text-xl font-bold text-slate-900">
+                      ${booking.totalAmount}
+                    </p>
+                  </div>
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                      <div className="flex items-center space-x-2 text-slate-600">
-                        <User size={18} className="flex-shrink-0" />
-                        <span className="text-sm">{booking.providerName}</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-slate-600">
-                        <Calendar size={18} className="flex-shrink-0" />
-                        <span className="text-sm">
-                          {new Date(booking.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
+                <div className="mb-4">
+                  <p className="text-sm text-slate-700">
+                    {booking.description}
+                  </p>
+                  <p className="text-sm text-slate-600 mt-1">
+                    📍 {booking.address}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    ⏱️ {booking.estimatedHours} hours
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2">
+                  {booking.status === "accepted" || booking.status === "in-progress" ? (
+                    <button
+                      onClick={() => navigate(`/chat/${booking._id}`)}
+                      className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      💬 Chat
+                    </button>
+                  ) : null}
+
+                  {booking.status === "pending" && (
+                    <button
+                      onClick={() => handleCancelBooking(booking._id)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      Cancel Booking
+                    </button>
+                  )}
+
+                  {booking.status === "completed" && !booking.review && (
+                    <button
+                      onClick={() => {
+                        setSelectedBooking(booking);
+                        setShowReviewModal(true);
+                      }}
+                      className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      ⭐ Leave Review
+                    </button>
+                  )}
+
+                  {booking.review && (
+                    <div className="w-full mt-2 p-3 bg-slate-50 rounded-lg">
+                      <p className="text-sm font-medium text-slate-700">
+                        Your Review
+                      </p>
+                      <div className="flex items-center mt-1">
+                        <span className="text-yellow-500">
+                          {"★".repeat(booking.review.rating)}
+                          {"☆".repeat(5 - booking.review.rating)}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2 text-slate-600">
-                        <Clock size={18} className="flex-shrink-0" />
-                        <span className="text-sm">{booking.time}</span>
-                      </div>
-                      {booking.price && (
-                        <div className="text-sm font-semibold text-slate-900">
-                          Price: {booking.price}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mb-4">
-                      <p className="text-sm text-slate-600">
-                        <span className="font-medium">Description:</span> {booking.description}
+                      <p className="text-sm text-slate-600 mt-1">
+                        {booking.review.comment}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="flex flex-col space-y-2 lg:ml-6 mt-4 lg:mt-0">
-                    <button
-                      onClick={() => navigate(`/provider/${booking.providerId}`)}
-                      className="px-4 py-2 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap"
-                    >
-                      View Provider
-                    </button>
-                    {booking.status === 'completed' && (
-                      <button
-                        onClick={() => handleReview(booking.id)}
-                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
-                      >
-                        Write Review
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-xl text-slate-600 mb-4">
-              {statusFilter === 'all' 
-                ? 'You have no bookings yet' 
-                : `No ${statusFilter} bookings found`}
-            </p>
-            <button
-              onClick={() => navigate('/browse')}
-              className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-            >
-              Browse Services
-            </button>
-          </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      {showReviewModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">
+              Leave a Review
+            </h2>
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Rating
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() =>
+                        setReviewData({ ...reviewData, rating: star })
+                      }
+                      className="text-3xl"
+                    >
+                      {star <= reviewData.rating ? (
+                        <span className="text-yellow-500">★</span>
+                      ) : (
+                        <span className="text-slate-300">☆</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Comment
+                </label>
+                <textarea
+                  value={reviewData.comment}
+                  onChange={(e) =>
+                    setReviewData({ ...reviewData, comment: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(false)}
+                  className="flex-1 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  Submit Review
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

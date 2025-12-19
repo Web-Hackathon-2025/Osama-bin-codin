@@ -7,9 +7,23 @@ interface User {
   name: string;
   email: string;
   phone?: string;
+  role: "user" | "worker" | "admin";
   avatar?: string;
   bio?: string;
   isVerified: boolean;
+  isApproved?: boolean;
+  workerProfile?: {
+    jobCategories: string[];
+    experience: number;
+    hourlyRate: number;
+    skills: string[];
+    availability: string;
+    serviceAreas: string[];
+    averageRating?: number;
+    numberOfRatings?: number;
+  };
+  stripeAccountId?: string;
+  stripeOnboardingComplete?: boolean;
 }
 
 interface AuthContextType {
@@ -18,10 +32,11 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<any>;
   logout: () => void;
-  register: (name: string, email: string, password: string) => Promise<any>;
+  register: (data: any) => Promise<any>;
   verifyOTP: (email: string, otp: string) => Promise<any>;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,21 +48,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) {
+      try {
+        const response = await authAPI.getMe();
+        setUser(response.data);
+      } catch (error) {
+        localStorage.removeItem("token");
+        setTokenState(null);
+        setUser(null);
+      }
+    }
+  };
+
   useEffect(() => {
     const loadUser = async () => {
-      const savedToken = localStorage.getItem("token");
-      if (savedToken) {
-        try {
-          const response = await authAPI.getMe();
-          setUser(response.data);
-        } catch (error) {
-          localStorage.removeItem("token");
-          setTokenState(null);
-        }
-      }
+      await refreshUser();
       setLoading(false);
     };
-
     loadUser();
   }, []);
 
@@ -60,8 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    const response = await authAPI.register({ name, email, password });
+  const register = async (data: any) => {
+    const response = await authAPI.register(data);
     return response.data;
   };
 
@@ -98,6 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         verifyOTP,
         setUser,
         setToken,
+        refreshUser,
       }}
     >
       {children}
