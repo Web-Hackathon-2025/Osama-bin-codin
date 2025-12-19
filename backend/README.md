@@ -36,6 +36,11 @@ EMAIL_PASSWORD=your_16_digit_app_password
 
 # Frontend URL (for password reset links)
 FRONTEND_URL=http://localhost:5173
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 3. **Gmail Setup for Email Service:**
@@ -207,6 +212,9 @@ curl -X GET http://localhost:5000/api/profile \
 - `EMAIL_USER` - Gmail address for sending emails
 - `EMAIL_PASSWORD` - Gmail app password (16 digits)
 - `FRONTEND_URL` - Frontend URL for reset links
+- `CLOUDINARY_CLOUD_NAME` - Your Cloudinary cloud name
+- `CLOUDINARY_API_KEY` - Your Cloudinary API key
+- `CLOUDINARY_API_SECRET` - Your Cloudinary API secret
 
 ## Notes
 
@@ -234,5 +242,233 @@ curl -X GET http://localhost:5000/api/profile \
 **JWT errors:**
 
 - Ensure `JWT_SECRET` is set in .env
+
+## 📸 Cloudinary Image Upload Integration
+
+This backend includes full Cloudinary integration for handling image uploads. Images are uploaded to Cloudinary and the URLs are stored in MongoDB.
+
+### Cloudinary Setup
+
+1. **Create a Cloudinary Account:**
+   - Go to [https://cloudinary.com](https://cloudinary.com)
+   - Sign up for a free account
+   - Navigate to Dashboard to get your credentials
+
+2. **Get Your Credentials:**
+   - Cloud Name: Found in your dashboard (e.g., `dxxxxx`)
+   - API Key: Found in your dashboard (e.g., `123456789012345`)
+   - API Secret: Found in your dashboard (click "Reveal" to see it)
+
+3. **Add to .env file:**
+   ```env
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+   ```
+
+### Image Upload Features
+
+The backend supports the following image upload functionalities:
+
+1. **Profile Avatar Upload** - Single profile picture for users
+2. **Portfolio Upload** - Multiple images for worker portfolios
+3. **General Purpose Upload** - Single or multiple images for any use
+4. **Image Deletion** - Delete images from Cloudinary
+
+### Upload Endpoints (`/api/upload`)
+
+All upload endpoints require authentication (`Authorization: Bearer TOKEN`)
+
+#### 1. Upload Profile Avatar
+
+```http
+POST /api/upload/avatar
+Content-Type: multipart/form-data
+
+Body:
+- avatar: [image file]
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Avatar uploaded successfully",
+  "data": {
+    "avatar": "https://res.cloudinary.com/...jpg",
+    "user": { /* updated user object */ }
+  }
+}
+```
+
+#### 2. Upload Portfolio Images (Workers)
+
+```http
+POST /api/upload/portfolio
+Content-Type: multipart/form-data
+
+Body:
+- portfolio: [image files] (up to 10 files)
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Portfolio images uploaded successfully",
+  "data": {
+    "portfolio": [
+      {
+        "url": "https://res.cloudinary.com/...jpg",
+        "public_id": "karigar-app/xxx",
+        "uploadedAt": "2024-12-19T..."
+      }
+    ]
+  }
+}
+```
+
+#### 3. Upload Single Image (General)
+
+```http
+POST /api/upload/single
+Content-Type: multipart/form-data
+
+Body:
+- image: [image file]
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Image uploaded successfully",
+  "data": {
+    "url": "https://res.cloudinary.com/...jpg",
+    "public_id": "karigar-app/xxx"
+  }
+}
+```
+
+#### 4. Upload Multiple Images (General)
+
+```http
+POST /api/upload/multiple
+Content-Type: multipart/form-data
+
+Body:
+- images: [image files] (up to 10 files)
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Images uploaded successfully",
+  "data": [
+    {
+      "url": "https://res.cloudinary.com/...jpg",
+      "public_id": "karigar-app/xxx"
+    }
+  ]
+}
+```
+
+#### 5. Delete Image
+
+```http
+DELETE /api/upload/:publicId
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Image deleted successfully"
+}
+```
+
+### Image Upload Configuration
+
+- **Supported Formats:** JPG, JPEG, PNG, GIF, WEBP
+- **Max File Size:** 5MB per file
+- **Max Images:** 10 files per request (for multiple uploads)
+- **Auto Optimization:** Images are automatically resized to max 1000x1000px
+- **Storage Folder:** All images stored in `karigar-app` folder on Cloudinary
+
+### Frontend Integration Example
+
+```javascript
+// Upload avatar
+const uploadAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const response = await fetch('http://localhost:5000/api/upload/avatar', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  });
+
+  const data = await response.json();
+  return data;
+};
+
+// Upload portfolio (multiple images)
+const uploadPortfolio = async (files) => {
+  const formData = new FormData();
+  files.forEach(file => {
+    formData.append('portfolio', file);
+  });
+
+  const response = await fetch('http://localhost:5000/api/upload/portfolio', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  });
+
+  const data = await response.json();
+  return data;
+};
+```
+
+### Database Schema Updates
+
+The User model now includes:
+
+1. **Avatar field** (String) - Stores Cloudinary URL for profile picture
+2. **Portfolio field** (Array) - Stores multiple portfolio images with:
+   - `url`: Cloudinary image URL
+   - `public_id`: Cloudinary public ID for deletion
+   - `uploadedAt`: Timestamp of upload
+
+### Cloudinary Features Used
+
+- **Automatic Format Conversion:** Images optimized for web
+- **CDN Delivery:** Fast global image delivery
+- **Transformation:** Automatic resizing and optimization
+- **Secure Storage:** Images stored securely in the cloud
+- **Easy Deletion:** Remove images using public_id
+
+### Troubleshooting Cloudinary
+
+**Upload fails:**
+- Verify Cloudinary credentials in .env
+- Check file size is under 5MB
+- Ensure file is a valid image format
+- Verify network connectivity
+
+**Images not displaying:**
+- Check if URL is correctly saved in database
+- Verify Cloudinary account is active
+- Check CORS settings on Cloudinary dashboard
+
+**Deletion fails:**
+- Ensure public_id is correct format
+- Verify API credentials have deletion permissions
 - Check token format: `Bearer <token>`
 - Verify token hasn't expired
