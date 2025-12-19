@@ -16,6 +16,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import { authenticateSocket } from "./middleware/socketAuthMiddleware.js";
 import { initializeSocket } from "./sockets/chatSocket.js";
+import { apiLimiter, authLimiter, createAccountLimiter, chatLimiter } from "./middleware/rateLimiter.js";
 
 // Load environment variables
 dotenv.config();
@@ -50,18 +51,21 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Apply general rate limiter to all API routes
+app.use("/api/", apiLimiter);
+
 // Routes
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to the API" });
 });
 
-// API Routes
-app.use("/api/auth", authRoutes);
+// API Routes with specific rate limiters
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/examples", exampleRoutes);
 app.use("/api/workers", workerRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/bookings", bookingRoutes);
+app.use("/api/bookings", Limiter, chatbookingRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/chat", chatRoutes);
