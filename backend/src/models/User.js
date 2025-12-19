@@ -110,6 +110,22 @@ const userSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      portfolio: [
+        {
+          url: {
+            type: String,
+            required: true,
+          },
+          public_id: {
+            type: String,
+            required: true,
+          },
+          uploadedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
     },
     isVerified: {
       type: Boolean,
