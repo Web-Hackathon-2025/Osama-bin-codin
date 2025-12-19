@@ -1,52 +1,95 @@
-import React from 'react';
-import { CheckCircle, X } from 'lucide-react';
-import providersData from '../data/providers.json';
-import { useUser } from '../context/UserContext';
-import type { ServiceProvider } from '../types';
+import React, { useEffect, useState } from "react";
+import { CheckCircle, X } from "lucide-react";
+import { workerAPI } from "../services/api";
 
 const ManageProfile: React.FC = () => {
-  const { userId } = useUser();
-  const provider = providersData.find((p) => p.id === userId) as ServiceProvider | undefined;
-
-  const [formData, setFormData] = React.useState({
-    name: provider?.name || '',
-    email: provider?.email || '',
-    phone: provider?.phone || '',
-    category: provider?.category || '',
-    services: provider?.services.join(', ') || '',
-    priceRange: provider?.priceRange || '',
-    availability: provider?.availability || '',
-    bio: provider?.bio || '',
-    location: provider?.location || '',
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    jobCategories: [] as string[],
+    hourlyRate: "",
+    experience: "",
+    skills: [] as string[],
+    availability: "",
+    bio: "",
+    serviceAreas: [] as string[],
   });
 
-  const [showSuccess, setShowSuccess] = React.useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await workerAPI.getProfile();
+      console.log("📋 Profile data:", response.data);
+      const profile = response.data.workerProfile || response.data;
+
+      setFormData({
+        name: response.data.name || "",
+        email: response.data.email || "",
+        phone: response.data.phone || "",
+        jobCategories: profile.jobCategories || [],
+        hourlyRate: profile.hourlyRate?.toString() || "",
+        experience: profile.experience?.toString() || "",
+        skills: profile.skills || [],
+        availability: profile.availability || "",
+        bio: profile.bio || "",
+        serviceAreas: profile.serviceAreas || [],
+      });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Show success message (UI only)
-    setShowSuccess(true);
-    
-    // Hide success message after 3 seconds
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
+
+    try {
+      await workerAPI.updateProfile({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        workerProfile: {
+          jobCategories: formData.jobCategories,
+          hourlyRate: parseFloat(formData.hourlyRate),
+          experience: parseInt(formData.experience),
+          skills: formData.skills,
+          availability: formData.availability,
+          bio: formData.bio,
+          serviceAreas: formData.serviceAreas,
+        },
+      });
+
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Failed to update profile");
+    }
   };
 
-  if (!provider) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">Profile not found</h1>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
       </div>
     );
   }
@@ -56,7 +99,9 @@ const ManageProfile: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Manage Profile</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            Manage Profile
+          </h1>
           <p className="text-lg text-slate-600">
             Update your professional information and services
           </p>
@@ -66,18 +111,23 @@ const ManageProfile: React.FC = () => {
         {showSuccess && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3">
             <CheckCircle className="text-green-600" size={24} />
-            <p className="text-green-800 font-medium">Profile updated successfully!</p>
+            <p className="text-green-800 font-medium">
+              Profile updated successfully!
+            </p>
           </div>
         )}
 
         {/* Profile Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-6 md:p-8">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-xl shadow-md p-6 md:p-8"
+        >
           {/* Personal Information */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-slate-900 mb-4 pb-2 border-b border-slate-200">
               Personal Information
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -120,12 +170,25 @@ const ManageProfile: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Location
+                  Hourly Rate ($)
                 </label>
                 <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
+                  type="number"
+                  name="hourlyRate"
+                  value={formData.hourlyRate}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Experience (years)
+                </label>
+                <input
+                  type="number"
+                  name="experience"
+                  value={formData.experience}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -142,52 +205,66 @@ const ManageProfile: React.FC = () => {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Service Category
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Plumber">Plumber</option>
-                  <option value="Electrician">Electrician</option>
-                  <option value="Cleaner">Cleaner</option>
-                  <option value="Carpenter">Carpenter</option>
-                  <option value="Painter">Painter</option>
-                  <option value="Tutor">Tutor</option>
-                  <option value="AC Repair">AC Repair</option>
-                  <option value="Pest Control">Pest Control</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Services Offered
+                  Service Categories (comma-separated)
                 </label>
                 <input
                   type="text"
-                  name="services"
-                  value={formData.services}
-                  onChange={handleChange}
-                  placeholder="e.g., Pipe Repair, Tap Installation, Tank Cleaning"
+                  name="jobCategories"
+                  value={formData.jobCategories.join(", ")}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      jobCategories: e.target.value
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                  placeholder="Plumber, Electrician, etc."
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <p className="mt-2 text-sm text-slate-500">
-                  Separate multiple services with commas
-                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Price Range
+                  Skills (comma-separated)
                 </label>
                 <input
                   type="text"
-                  name="priceRange"
-                  value={formData.priceRange}
-                  onChange={handleChange}
-                  placeholder="e.g., ₹200 - ₹800"
+                  name="skills"
+                  value={formData.skills.join(", ")}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      skills: e.target.value
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                  placeholder="Pipe fitting, Leak repair, etc."
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Service Areas (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  name="serviceAreas"
+                  value={formData.serviceAreas.join(", ")}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      serviceAreas: e.target.value
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                  placeholder="Manhattan, Brooklyn, etc."
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -201,22 +278,22 @@ const ManageProfile: React.FC = () => {
                   name="availability"
                   value={formData.availability}
                   onChange={handleChange}
-                  placeholder="e.g., Mon-Sat, 9 AM - 6 PM"
+                  placeholder="Mon-Fri, 9AM-5PM"
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Bio / Description
+                  Bio
                 </label>
                 <textarea
                   name="bio"
                   value={formData.bio}
                   onChange={handleChange}
                   rows={4}
-                  placeholder="Tell customers about your experience and expertise..."
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  placeholder="Tell customers about yourself and your experience..."
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -226,17 +303,7 @@ const ManageProfile: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-200">
             <button
               type="button"
-              onClick={() => setFormData({
-                name: provider.name,
-                email: provider.email,
-                phone: provider.phone,
-                category: provider.category,
-                services: provider.services.join(', '),
-                priceRange: provider.priceRange,
-                availability: provider.availability,
-                bio: provider.bio,
-                location: provider.location,
-              })}
+              onClick={fetchProfile}
               className="flex-1 px-6 py-3 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center space-x-2"
             >
               <X size={20} />
@@ -244,7 +311,7 @@ const ManageProfile: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center space-x-2"
+              className="flex-1 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
               <CheckCircle size={20} />
               <span>Save Changes</span>
@@ -257,3 +324,4 @@ const ManageProfile: React.FC = () => {
 };
 
 export default ManageProfile;
+

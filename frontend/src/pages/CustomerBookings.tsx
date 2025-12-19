@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { bookingAPI } from "../services/api";
 
 interface Booking {
   _id: string;
-  workerId: {
+  worker: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  workerId?: {
     _id: string;
     name: string;
     email: string;
@@ -12,11 +17,22 @@ interface Booking {
   serviceCategory: string;
   description: string;
   scheduledDate: string;
-  address: string;
+  serviceAddress?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
+  address?: string;
   estimatedHours: number;
   totalAmount: number;
   status: string;
   paymentStatus: string;
+  paymentMethod: string;
   createdAt: string;
   review?: {
     rating: number;
@@ -26,6 +42,7 @@ interface Booking {
 
 const CustomerBookings = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -34,14 +51,22 @@ const CustomerBookings = () => {
   const [reviewData, setReviewData] = useState({ rating: 5, comment: "" });
 
   useEffect(() => {
+    // Check for payment success
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus === "success") {
+      setTimeout(() => {
+        alert("Payment successful! Your booking has been confirmed.");
+      }, 500);
+    }
     fetchBookings();
-  }, []);
+  }, [searchParams]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
       const response = await bookingAPI.getMyBookings();
-      setBookings(response.data.data || []);
+      console.log("📦 Bookings response:", response.data);
+      setBookings(response.data.bookings || response.data.data || []);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setBookings([]);
@@ -91,7 +116,7 @@ const CustomerBookings = () => {
       case "accepted":
         return "bg-blue-100 text-blue-800";
       case "in-progress":
-        return "bg-purple-100 text-purple-800";
+        return "bg-yellow-100 text-orange-700";
       case "completed":
         return "bg-green-100 text-green-800";
       case "cancelled":
@@ -161,11 +186,19 @@ const CustomerBookings = () => {
                       {booking.serviceCategory}
                     </h3>
                     <p className="text-sm text-slate-600">
-                      Provider: {booking.workerId.name}
+                      Provider:{" "}
+                      {booking.worker?.name || booking.workerId?.name || "N/A"}
                     </p>
                     <p className="text-sm text-slate-600">
                       Scheduled:{" "}
                       {new Date(booking.scheduledDate).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Payment:{" "}
+                      <span className="capitalize">
+                        {booking.paymentMethod}
+                      </span>
+                      {booking.paymentStatus === "paid" && " ✅"}
                     </p>
                   </div>
                   <div className="text-right">
@@ -187,7 +220,10 @@ const CustomerBookings = () => {
                     {booking.description}
                   </p>
                   <p className="text-sm text-slate-600 mt-1">
-                    📍 {booking.address}
+                    📍{" "}
+                    {booking.serviceAddress?.street ||
+                      booking.address ||
+                      "Address not specified"}
                   </p>
                   <p className="text-sm text-slate-600">
                     ⏱️ {booking.estimatedHours} hours
@@ -321,3 +357,4 @@ const CustomerBookings = () => {
 };
 
 export default CustomerBookings;
+

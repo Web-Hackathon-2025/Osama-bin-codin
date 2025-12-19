@@ -172,10 +172,10 @@ const ProviderDashboard: React.FC = () => {
           </div>
 
           {/* Status */}
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium text-slate-600">Status</h3>
-              <DollarSign className="text-purple-500" size={24} />
+              <DollarSign className="text-yellow-500" size={24} />
             </div>
             <p className="text-xl font-bold text-slate-900">
               {stats?.isApproved ? (
@@ -279,7 +279,7 @@ const ProviderDashboard: React.FC = () => {
             onClick={() => navigate("/provider/history")}
             className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow text-left"
           >
-            <CheckCircle className="text-purple-600 mb-3" size={32} />
+            <CheckCircle className="text-yellow-600 mb-3" size={32} />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Booking History
             </h3>
@@ -294,3 +294,4 @@ const ProviderDashboard: React.FC = () => {
 };
 
 export default ProviderDashboard;
+

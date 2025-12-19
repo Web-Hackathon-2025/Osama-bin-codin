@@ -170,12 +170,12 @@ const AdminDashboard: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium text-slate-600">
                 Approved Workers
               </h3>
-              <CheckCircle className="text-purple-500" size={24} />
+              <CheckCircle className="text-yellow-500" size={24} />
             </div>
             <p className="text-3xl font-bold text-slate-900">
               {stats?.approvedWorkers || 0}
@@ -292,7 +292,7 @@ const AdminDashboard: React.FC = () => {
                               user.role === "worker"
                                 ? "bg-blue-100 text-blue-700"
                                 : user.role === "admin"
-                                ? "bg-purple-100 text-purple-700"
+                                ? "bg-yellow-100 text-orange-600"
                                 : "bg-green-100 text-green-700"
                             }`}
                           >
@@ -572,3 +572,4 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
+

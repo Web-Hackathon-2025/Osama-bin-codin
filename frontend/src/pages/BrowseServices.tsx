@@ -35,6 +35,26 @@ const jobCategories = [
   "Other",
 ];
 
+// Helper to convert display name to backend enum value
+const convertCategoryToBackend = (category: string): string => {
+  const mapping: { [key: string]: string } = {
+    Plumbing: "plumber",
+    Electrical: "electrician",
+    Carpentry: "carpenter",
+    Painting: "painter",
+    Cleaning: "cleaner",
+    Landscaping: "gardener",
+    HVAC: "ac-technician",
+    Roofing: "other",
+    Moving: "moving-services",
+    "Pest Control": "pest-control",
+    "Appliance Repair": "appliance-repair",
+    Handyman: "other",
+    Other: "other",
+  };
+  return mapping[category] || "other";
+};
+
 const BrowseServices = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [filteredWorkers, setFilteredWorkers] = useState<Worker[]>([]);
@@ -42,6 +62,8 @@ const BrowseServices = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileWorker, setProfileWorker] = useState<Worker | null>(null);
   const [bookingData, setBookingData] = useState({
     serviceCategory: "",
     description: "",
@@ -94,6 +116,11 @@ const BrowseServices = () => {
     setShowBookingModal(true);
   };
 
+  const handleViewProfile = (worker: Worker) => {
+    setProfileWorker(worker);
+    setShowProfileModal(true);
+  };
+
   const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedWorker) return;
@@ -101,10 +128,9 @@ const BrowseServices = () => {
     try {
       setBookingLoading(true);
 
-      // Create booking
-      const bookingResponse = await bookingAPI.createBooking({
+      const bookingPayload = {
         workerId: selectedWorker._id,
-        serviceCategory: bookingData.serviceCategory,
+        serviceCategory: convertCategoryToBackend(bookingData.serviceCategory),
         description: bookingData.description,
         scheduledDate: bookingData.scheduledDate,
         scheduledTime: bookingData.scheduledTime,
@@ -113,9 +139,16 @@ const BrowseServices = () => {
         },
         estimatedHours: bookingData.estimatedHours,
         paymentMethod: bookingData.paymentMethod,
-      });
+      };
 
-      const booking = bookingResponse.data.data || bookingResponse.data.booking;
+      console.log("📤 Sending booking request:", bookingPayload);
+
+      // Create booking
+      const bookingResponse = await bookingAPI.createBooking(bookingPayload);
+
+      console.log("✅ Booking response:", bookingResponse.data);
+
+      const booking = bookingResponse.data.booking;
 
       // If cash payment, just show success and redirect
       if (bookingData.paymentMethod === "cash") {
@@ -136,37 +169,28 @@ const BrowseServices = () => {
         return;
       }
 
-      // Handle Stripe payment
+      // Handle Stripe payment - redirect to Checkout
       if (bookingData.paymentMethod === "stripe") {
-        // Get Stripe config
-        const configResponse = await bookingAPI.getStripeConfig();
-        const { publishableKey } = configResponse.data;
+        const checkoutUrl = bookingResponse.data.checkoutUrl;
 
-        // Initialize Stripe
-        const stripe = await loadStripe(publishableKey);
-        if (!stripe) {
-          throw new Error("Failed to initialize Stripe");
+        if (!checkoutUrl) {
+          throw new Error("No checkout URL received from server");
         }
 
-        // Create payment intent
-        const paymentResponse = await bookingAPI.confirmPayment(booking._id);
-        const { clientSecret } = paymentResponse.data;
-
-        // Redirect to Stripe Checkout or Payment
-        const { error } = await stripe.confirmPayment({
-          clientSecret,
-          confirmParams: {
-            return_url: `${window.location.origin}/customer/bookings`,
-          },
-        });
-
-        if (error) {
-          alert(error.message);
-        }
+        // Redirect to Stripe Checkout
+        window.location.href = checkoutUrl;
+        return;
       }
     } catch (error: any) {
-      console.error("Error creating booking:", error);
-      alert(error.response?.data?.message || "Failed to create booking");
+      console.error("❌ Error creating booking:", error);
+      console.error("Error response:", error.response);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create booking";
+
+      alert(`Booking Error: ${errorMessage}`);
     } finally {
       setBookingLoading(false);
     }
@@ -305,12 +329,20 @@ const BrowseServices = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleBookService(worker)}
-                  className="w-full py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
-                >
-                  Book Service
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleViewProfile(worker)}
+                    className="py-2 bg-slate-100 text-slate-900 rounded-lg hover:bg-slate-200 transition-colors"
+                  >
+                    View Profile
+                  </button>
+                  <button
+                    onClick={() => handleBookService(worker)}
+                    className="py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                  >
+                    Book Service
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -560,8 +592,180 @@ const BrowseServices = () => {
           </div>
         </div>
       )}
+
+      {/* Profile Modal */}
+      {showProfileModal && profileWorker && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Service Provider Profile
+                </h2>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="text-slate-600 hover:text-slate-900"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-3xl font-bold text-slate-900">
+                      {profileWorker.name}
+                    </h3>
+                    <div className="flex items-center mt-2">
+                      <span className="text-yellow-500 text-2xl">★</span>
+                      <span className="ml-2 text-lg text-slate-700">
+                        {(profileWorker.workerProfile.rating || 0).toFixed(1)} (
+                        {profileWorker.workerProfile.totalJobs || 0} jobs
+                        completed)
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-slate-900">
+                      ${profileWorker.workerProfile.hourlyRate}
+                    </p>
+                    <p className="text-sm text-slate-600">/hour</p>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                {profileWorker.workerProfile.bio && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                      About
+                    </h4>
+                    <p className="text-slate-700">
+                      {profileWorker.workerProfile.bio}
+                    </p>
+                  </div>
+                )}
+
+                {/* Services & Experience */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                      Services Offered
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profileWorker.workerProfile.jobCategories.map((cat) => (
+                        <span
+                          key={cat}
+                          className="px-3 py-1 bg-slate-900 text-white text-sm rounded-full"
+                        >
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                      Experience
+                    </h4>
+                    <p className="text-slate-700">
+                      {profileWorker.workerProfile.experience} years of
+                      professional experience
+                    </p>
+                  </div>
+                </div>
+
+                {/* Skills */}
+                {profileWorker.workerProfile.skills.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                      Skills
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {profileWorker.workerProfile.skills.map(
+                        (skill, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-slate-100 text-slate-700 text-sm rounded"
+                          >
+                            {skill}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Availability & Service Areas */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                      Availability
+                    </h4>
+                    <p className="text-slate-700">
+                      {profileWorker.workerProfile.availability}
+                    </p>
+                  </div>
+
+                  {profileWorker.workerProfile.serviceAreas &&
+                    profileWorker.workerProfile.serviceAreas.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                          Service Areas
+                        </h4>
+                        <p className="text-slate-700">
+                          {profileWorker.workerProfile.serviceAreas.join(", ")}
+                        </p>
+                      </div>
+                    )}
+                </div>
+
+                {/* Contact */}
+                <div>
+                  <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                    Contact
+                  </h4>
+                  <p className="text-slate-700">{profileWorker.email}</p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowProfileModal(false);
+                      handleBookService(profileWorker);
+                    }}
+                    className="flex-1 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-semibold"
+                  >
+                    Book This Provider
+                  </button>
+                  <button
+                    onClick={() => setShowProfileModal(false)}
+                    className="px-6 py-3 bg-slate-100 text-slate-900 rounded-lg hover:bg-slate-200 transition-colors font-semibold"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default BrowseServices;
+

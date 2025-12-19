@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import {
   createPaymentIntent,
   createConnectPaymentIntent,
+  createConnectCheckoutSession,
   cancelPaymentIntent,
   createRefund,
   retrievePaymentIntent,
@@ -23,6 +24,8 @@ import {
 // @access  Private (Customer)
 export const createBooking = async (req, res) => {
   try {
+    console.log("📝 Creating booking with data:", req.body);
+
     const {
       workerId,
       serviceCategory,
@@ -44,6 +47,14 @@ export const createBooking = async (req, res) => {
       !scheduledTime ||
       !estimatedHours
     ) {
+      console.error("❌ Validation failed:", {
+        workerId: !workerId,
+        serviceCategory: !serviceCategory,
+        description: !description,
+        scheduledDate: !scheduledDate,
+        scheduledTime: !scheduledTime,
+        estimatedHours: !estimatedHours,
+      });
       return res.status(400).json({
         message: "Please provide all required fields",
         missing: {
@@ -107,8 +118,16 @@ export const createBooking = async (req, res) => {
       }
 
       try {
-        // Use Stripe Connect to pay worker directly (10% platform fee)
-        const paymentIntent = await createConnectPaymentIntent(
+        // Create booking first
+        const booking = await Booking.create(bookingData);
+        await booking.populate(
+          "worker",
+          "name email phone avatar workerProfile"
+        );
+
+        // Create Checkout Session
+        const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const checkoutSession = await createConnectCheckoutSession(
           totalAmount,
           worker.workerProfile.stripeAccountId,
           10, // 10% platform fee
@@ -118,20 +137,19 @@ export const createBooking = async (req, res) => {
             workerId: workerId,
             workerName: worker.name,
             serviceCategory,
+            bookingId: booking._id.toString(),
             bookingDescription: description,
-          }
+          },
+          `${baseUrl}/customer/bookings?payment=success&booking=${booking._id}`,
+          `${baseUrl}/services?payment=cancel&booking=${booking._id}`
         );
 
-        bookingData.paymentIntentId = paymentIntent.paymentIntentId;
-        bookingData.paymentStatus = "pending";
-        bookingData.platformFee = paymentIntent.platformFee;
-        bookingData.workerAmount = paymentIntent.workerAmount;
-
-        const booking = await Booking.create(bookingData);
-        await booking.populate(
-          "worker",
-          "name email phone avatar workerProfile"
-        );
+        // Update booking with session info
+        booking.stripeSessionId = checkoutSession.sessionId;
+        booking.paymentStatus = "pending";
+        booking.platformFee = checkoutSession.platformFee;
+        booking.workerAmount = checkoutSession.workerAmount;
+        await booking.save();
 
         // Send notification to worker
         await notifyBookingCreated(workerId, req.user._id, booking._id);
@@ -139,10 +157,10 @@ export const createBooking = async (req, res) => {
         return res.status(201).json({
           message: "Booking created successfully",
           booking,
-          clientSecret: paymentIntent.clientSecret,
+          checkoutUrl: checkoutSession.url,
           requiresPayment: true,
-          platformFee: paymentIntent.platformFee,
-          workerAmount: paymentIntent.workerAmount,
+          platformFee: checkoutSession.platformFee,
+          workerAmount: checkoutSession.workerAmount,
         });
       } catch (error) {
         console.error("Stripe payment error:", error);
@@ -165,8 +183,16 @@ export const createBooking = async (req, res) => {
       requiresPayment: false,
     });
   } catch (error) {
-    console.error("Create booking error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("❌ Create booking error:", error);
+    console.error("Error details:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      message: error.message || "Failed to create booking",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
@@ -251,6 +277,13 @@ export const getMyBookings = async (req, res) => {
       query.status = status;
     }
 
+    console.log(
+      "📋 Fetching bookings for user:",
+      req.user._id,
+      "role:",
+      req.user.role
+    );
+
     const bookings = await Booking.find(query)
       .populate("customer", "name email phone avatar")
       .populate("worker", "name email phone avatar workerProfile")
@@ -259,6 +292,8 @@ export const getMyBookings = async (req, res) => {
       .sort({ createdAt: -1 });
 
     const count = await Booking.countDocuments(query);
+
+    console.log(`✅ Found ${bookings.length} bookings (total: ${count})`);
 
     res.json({
       bookings,

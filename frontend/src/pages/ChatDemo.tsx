@@ -2,7 +2,7 @@ import ChatBox from '../components/ChatBox';
 
 export default function ChatDemo() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-100 p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">
           🎯 ChatBox Component Demo
@@ -81,3 +81,4 @@ export default function ChatDemo() {
     </div>
   );
 }
+

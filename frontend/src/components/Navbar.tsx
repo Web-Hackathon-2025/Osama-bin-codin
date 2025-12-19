@@ -59,7 +59,7 @@ const Navbar: React.FC = () => {
             {getNavLinks().map((link, index) => {
               const hoverColors = [
                 "hover:text-primary-700",
-                "hover:text-purple-700",
+                "hover:text-orange-600",
                 "hover:text-secondary-700",
                 "hover:text-success-700",
               ];
@@ -107,7 +107,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-colors shadow-md"
+                  className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-yellow-600 hover:from-primary-700 hover:to-orange-600 text-white rounded-xl font-semibold transition-colors shadow-md"
                 >
                   Sign Up
                 </Link>
@@ -119,12 +119,12 @@ const Navbar: React.FC = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2.5 rounded-xl bg-purple-100 hover:bg-purple-200 transition-all shadow-md"
+              className="p-2.5 rounded-xl bg-yellow-100 hover:bg-yellow-200 transition-all shadow-md"
             >
               {isMenuOpen ? (
-                <X size={24} className="text-purple-700" />
+                <X size={24} className="text-orange-600" />
               ) : (
-                <Menu size={24} className="text-purple-700" />
+                <Menu size={24} className="text-orange-600" />
               )}
             </button>
           </div>
@@ -136,13 +136,13 @@ const Navbar: React.FC = () => {
             {getNavLinks().map((link, index) => {
               const bgColors = [
                 "bg-blue-100",
-                "bg-purple-100",
+                "bg-yellow-100",
                 "bg-orange-100",
                 "bg-green-100",
               ];
               const textColors = [
                 "text-blue-700",
-                "text-purple-700",
+                "text-orange-600",
                 "text-orange-700",
                 "text-green-700",
               ];
@@ -162,7 +162,7 @@ const Navbar: React.FC = () => {
             })}
 
             {/* Auth Section */}
-            <div className="border-t-2 border-purple-200 pt-3 mt-3">
+            <div className="border-t-2 border-yellow-200 pt-3 mt-3">
               {user ? (
                 <div className="px-4">
                   <p className="py-2 text-sm font-semibold text-slate-600">
@@ -202,3 +202,4 @@ const Navbar: React.FC = () => {
 };
 
 export default Navbar;
+
