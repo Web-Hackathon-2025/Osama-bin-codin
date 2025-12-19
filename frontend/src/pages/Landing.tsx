@@ -79,40 +79,40 @@ const Landing: React.FC = () => {
             </p>
 
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-8 border border-white/20">
+            <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 border-2 border-yellow-200">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="relative group">
-                  <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-yellow-500 group-focus-within:text-yellow-600 transition-colors" size={22} />
+                  <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-yellow-600 group-focus-within:text-yellow-700 transition-colors" size={22} />
                   <input
                     type="text"
                     placeholder="Enter your location"
                     value={searchLocation}
                     onChange={(e) => setSearchLocation(e.target.value)}
-                    className="w-full pl-12 pr-32 py-4 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-slate-900 font-medium transition-all"
+                    className="w-full pl-12 pr-32 py-4 border-2 border-yellow-300 bg-yellow-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-400 focus:bg-white text-gray-800 font-medium transition-all placeholder:text-gray-500"
                   />
                   <button
                     type="button"
                     onClick={handleGetCurrentLocation}
                     disabled={isLoadingLocation}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white text-sm rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-sm rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                   >
                     {isLoadingLocation ? '⏳' : '📍'} {isLoadingLocation ? 'Loading...' : 'Use Current'}
                   </button>
                 </div>
                 <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500 group-focus-within:text-orange-600 transition-colors" size={22} />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-600 group-focus-within:text-orange-700 transition-colors" size={22} />
                   <input
                     type="text"
                     placeholder="What service do you need?"
                     value={searchService}
                     onChange={(e) => setSearchService(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-slate-900 font-medium transition-all"
+                    className="w-full pl-12 pr-4 py-4 border-2 border-orange-300 bg-orange-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-400 focus:bg-white text-gray-800 font-medium transition-all placeholder:text-gray-500"
                   />
                 </div>
               </div>
               <button
                 type="submit"
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-xl text-lg"
+                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-xl text-lg"
               >
                 🔍 Search Services
               </button>
