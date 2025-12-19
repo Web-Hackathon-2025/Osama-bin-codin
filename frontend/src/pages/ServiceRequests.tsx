@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Calendar,
@@ -33,6 +34,7 @@ interface Booking {
 }
 
 const ServiceRequests: React.FC = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(
@@ -210,8 +212,19 @@ const ServiceRequests: React.FC = () => {
                       })}
                     </p>
                   </div>
-
-                  {/* Action Buttons */}
+                  {/* Action Buttons */}{" "}
+                  {(booking.status === "accepted" ||
+                    booking.status === "in-progress") && (
+                    <div className="flex flex-col space-y-2 lg:ml-6 lg:min-w-40">
+                      <button
+                        onClick={() => navigate(`/chat/${booking._id}`)}
+                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <span>💬</span>
+                        <span>Chat</span>
+                      </button>
+                    </div>
+                  )}{" "}
                   {booking.status === "pending" && (
                     <div className="flex flex-col space-y-2 lg:ml-6 lg:min-w-[160px]">
                       <button
