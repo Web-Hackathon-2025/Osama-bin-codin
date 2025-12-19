@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import JobCategory from "../models/JobCategory.js";
+import Booking from "../models/Booking.js";
 
 // @desc    Get all users with role filtering
 // @route   GET /api/admin/users
@@ -299,6 +300,87 @@ export const deleteJobCategory = async (req, res) => {
     res.json({ message: "Job category deleted successfully" });
   } catch (error) {
     console.error("Delete job category error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all bookings (Admin)
+// @route   GET /api/admin/bookings
+// @access  Private (Admin)
+export const getAllBookings = async (req, res) => {
+  try {
+    const { status, paymentStatus, page = 1, limit = 20 } = req.query;
+
+    const query = {};
+    if (status) query.status = status;
+    if (paymentStatus) query.paymentStatus = paymentStatus;
+
+    const bookings = await Booking.find(query)
+      .populate("customer", "name email phone")
+      .populate("worker", "name email phone workerProfile.jobCategories")
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .sort({ createdAt: -1 });
+
+    const count = await Booking.countDocuments(query);
+
+    res.json({
+      bookings,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      totalBookings: count,
+    });
+  } catch (error) {
+    console.error("Get all bookings error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get platform-wide booking statistics
+// @route   GET /api/admin/bookings/stats
+// @access  Private (Admin)
+export const getPlatformBookingStats = async (req, res) => {
+  try {
+    const totalBookings = await Booking.countDocuments();
+    const pendingBookings = await Booking.countDocuments({ status: "pending" });
+    const completedBookings = await Booking.countDocuments({
+      status: "completed",
+    });
+    const cancelledBookings = await Booking.countDocuments({
+      status: "cancelled",
+    });
+    const activeBookings = await Booking.countDocuments({
+      status: { $in: ["accepted", "in-progress"] },
+    });
+
+    const totalRevenue = await Booking.aggregate([
+      { $match: { isPaid: true } },
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    ]);
+
+    const revenueByCategory = await Booking.aggregate([
+      { $match: { isPaid: true } },
+      {
+        $group: {
+          _id: "$serviceCategory",
+          total: { $sum: "$totalAmount" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { total: -1 } },
+    ]);
+
+    res.json({
+      totalBookings,
+      pendingBookings,
+      completedBookings,
+      cancelledBookings,
+      activeBookings,
+      totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
+      revenueByCategory,
+    });
+  } catch (error) {
+    console.error("Get platform booking stats error:", error);
     res.status(500).json({ message: error.message });
   }
 };

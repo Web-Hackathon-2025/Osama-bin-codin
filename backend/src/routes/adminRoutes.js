@@ -10,6 +10,8 @@ import {
   getAllJobCategories,
   updateJobCategory,
   deleteJobCategory,
+  getAllBookings,
+  getPlatformBookingStats,
 } from "../controllers/adminController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
@@ -35,5 +37,9 @@ router.post("/job-categories", createJobCategory);
 router.get("/job-categories", getAllJobCategories);
 router.put("/job-categories/:id", updateJobCategory);
 router.delete("/job-categories/:id", deleteJobCategory);
+
+// Booking management
+router.get("/bookings", getAllBookings);
+router.get("/bookings/stats", getPlatformBookingStats);
 
 export default router;

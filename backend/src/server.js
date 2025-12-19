@@ -7,6 +7,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import exampleRoutes from "./routes/exampleRoutes.js";
 import workerRoutes from "./routes/workerRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -32,6 +33,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/examples", exampleRoutes);
 app.use("/api/workers", workerRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
