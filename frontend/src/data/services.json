@@ -1,0 +1,50 @@
+[
+  {
+    "id": "cat-1",
+    "name": "Plumber",
+    "icon": "wrench",
+    "description": "Pipe repairs, installations, and maintenance"
+  },
+  {
+    "id": "cat-2",
+    "name": "Electrician",
+    "icon": "zap",
+    "description": "Electrical repairs, wiring, and installations"
+  },
+  {
+    "id": "cat-3",
+    "name": "Cleaner",
+    "icon": "sparkles",
+    "description": "Home and office cleaning services"
+  },
+  {
+    "id": "cat-4",
+    "name": "Carpenter",
+    "icon": "hammer",
+    "description": "Furniture repair and woodwork"
+  },
+  {
+    "id": "cat-5",
+    "name": "Painter",
+    "icon": "paint-bucket",
+    "description": "Interior and exterior painting"
+  },
+  {
+    "id": "cat-6",
+    "name": "Tutor",
+    "icon": "graduation-cap",
+    "description": "Home tutoring for all subjects"
+  },
+  {
+    "id": "cat-7",
+    "name": "AC Repair",
+    "icon": "wind",
+    "description": "AC installation, repair, and servicing"
+  },
+  {
+    "id": "cat-8",
+    "name": "Pest Control",
+    "icon": "bug",
+    "description": "Professional pest control services"
+  }
+]
