@@ -110,6 +110,27 @@ const userSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      // Stripe Connect fields for receiving payments
+      stripeAccountId: {
+        type: String,
+        default: null,
+      },
+      stripeOnboardingComplete: {
+        type: Boolean,
+        default: false,
+      },
+      stripeDetailsSubmitted: {
+        type: Boolean,
+        default: false,
+      },
+      stripeChargesEnabled: {
+        type: Boolean,
+        default: false,
+      },
+      stripePayoutsEnabled: {
+        type: Boolean,
+        default: false,
+      },
     },
     isVerified: {
       type: Boolean,

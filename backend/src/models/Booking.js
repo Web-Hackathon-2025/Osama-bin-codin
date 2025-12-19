@@ -96,6 +96,13 @@ const bookingSchema = new mongoose.Schema(
     transactionId: {
       type: String,
     },
+    platformFee: {
+      type: Number,
+      default: 0,
+    },
+    workerAmount: {
+      type: Number,
+    },
     isPaid: {
       type: Boolean,
       default: false,
@@ -133,6 +140,20 @@ const bookingSchema = new mongoose.Schema(
       },
       review: String,
       reviewedAt: Date,
+    },
+    disputeDetails: {
+      reportedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      reportedAt: Date,
+      reason: String,
+      resolvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      resolvedAt: Date,
+      resolution: String,
     },
     notes: {
       type: String,

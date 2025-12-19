@@ -12,6 +12,8 @@ import {
   deleteJobCategory,
   getAllBookings,
   getPlatformBookingStats,
+  getDisputedBookings,
+  resolveDispute,
 } from "../controllers/adminController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
@@ -41,5 +43,7 @@ router.delete("/job-categories/:id", deleteJobCategory);
 // Booking management
 router.get("/bookings", getAllBookings);
 router.get("/bookings/stats", getPlatformBookingStats);
+router.get("/bookings/disputed", getDisputedBookings);
+router.put("/bookings/:id/resolve-dispute", resolveDispute);
 
 export default router;

@@ -9,6 +9,7 @@ import {
   updateBookingStatus,
   cancelBooking,
   reviewBooking,
+  reportDispute,
   getBookingStats,
 } from "../controllers/bookingController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
@@ -39,5 +40,6 @@ router.post("/:id/review", authorize("user"), reviewBooking);
 
 // Common actions
 router.put("/:id/cancel", cancelBooking);
+router.put("/:id/dispute", reportDispute);
 
 export default router;
