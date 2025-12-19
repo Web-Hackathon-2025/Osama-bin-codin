@@ -80,6 +80,7 @@ export const notificationAPI = {
 // Admin API
 export const adminAPI = {
   getUsers: (params?: any) => api.get("/admin/users", { params }),
+  updateUser: (id: string, data: any) => api.put(`/admin/users/${id}`, data),
   updateUserStatus: (id: string, data: { isActive: boolean }) =>
     api.put(`/admin/users/${id}/status`, data),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
