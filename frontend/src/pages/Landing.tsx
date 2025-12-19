@@ -68,7 +68,7 @@ const Landing: React.FC = () => {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-block mb-6">
               <span className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-semibold border border-white/30 shadow-lg">
-                🎉 India's Most Trusted Service Marketplace
+                🎉 Pakistan's Most Trusted Service Marketplace
               </span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white">
