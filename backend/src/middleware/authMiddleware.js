@@ -53,3 +53,37 @@ export const generateToken = (id) => {
     expiresIn: process.env.JWT_EXPIRE || "30d",
   });
 };
+
+// Role-based authorization middleware
+export const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: `Role '${req.user.role}' is not authorized to access this route`,
+      });
+    }
+
+    next();
+  };
+};
+
+// Check if worker is approved
+export const isWorkerApproved = (req, res, next) => {
+  if (req.user.role !== "worker") {
+    return res
+      .status(403)
+      .json({ message: "Only workers can access this route" });
+  }
+
+  if (!req.user.workerProfile || !req.user.workerProfile.isApproved) {
+    return res.status(403).json({
+      message: "Your worker account is pending admin approval",
+    });
+  }
+
+  next();
+};
