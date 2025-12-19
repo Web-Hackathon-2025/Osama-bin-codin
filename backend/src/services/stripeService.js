@@ -2,7 +2,10 @@ import Stripe from "stripe";
 
 // Initialize Stripe with secret key (only if key is provided)
 let stripe;
-if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_your_stripe_secret_key_here') {
+if (
+  process.env.STRIPE_SECRET_KEY &&
+  process.env.STRIPE_SECRET_KEY !== "sk_test_your_stripe_secret_key_here"
+) {
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 }
 
@@ -20,9 +23,11 @@ export const createPaymentIntent = async (
 ) => {
   try {
     if (!stripe) {
-      throw new Error("Stripe is not configured. Please add STRIPE_SECRET_KEY to environment variables.");
+      throw new Error(
+        "Stripe is not configured. Please add STRIPE_SECRET_KEY to environment variables."
+      );
     }
-    
+
     // Convert amount to cents (Stripe uses smallest currency unit)
     const amountInCents = Math.round(amount * 100);
 

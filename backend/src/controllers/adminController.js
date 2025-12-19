@@ -343,10 +343,14 @@ export const getPlatformBookingStats = async (req, res) => {
   try {
     const totalBookings = await Booking.countDocuments();
     const pendingBookings = await Booking.countDocuments({ status: "pending" });
-    const completedBookings = await Booking.countDocuments({ status: "completed" });
-    const cancelledBookings = await Booking.countDocuments({ status: "cancelled" });
-    const activeBookings = await Booking.countDocuments({ 
-      status: { $in: ["accepted", "in-progress"] } 
+    const completedBookings = await Booking.countDocuments({
+      status: "completed",
+    });
+    const cancelledBookings = await Booking.countDocuments({
+      status: "cancelled",
+    });
+    const activeBookings = await Booking.countDocuments({
+      status: { $in: ["accepted", "in-progress"] },
     });
 
     const totalRevenue = await Booking.aggregate([
@@ -356,12 +360,12 @@ export const getPlatformBookingStats = async (req, res) => {
 
     const revenueByCategory = await Booking.aggregate([
       { $match: { isPaid: true } },
-      { 
-        $group: { 
-          _id: "$serviceCategory", 
+      {
+        $group: {
+          _id: "$serviceCategory",
           total: { $sum: "$totalAmount" },
-          count: { $sum: 1 }
-        } 
+          count: { $sum: 1 },
+        },
       },
       { $sort: { total: -1 } },
     ]);
@@ -380,4 +384,3 @@ export const getPlatformBookingStats = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
