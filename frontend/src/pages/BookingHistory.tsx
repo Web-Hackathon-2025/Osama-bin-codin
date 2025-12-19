@@ -55,7 +55,7 @@ const BookingHistory: React.FC = () => {
           </div>
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-sm font-medium text-slate-600 mb-2">Total Earnings</h3>
-            <p className="text-3xl font-bold text-purple-600">₹{totalEarnings.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-yellow-600">₹{totalEarnings.toLocaleString()}</p>
           </div>
         </div>
 
@@ -179,3 +179,4 @@ const BookingHistory: React.FC = () => {
 };
 
 export default BookingHistory;
+
