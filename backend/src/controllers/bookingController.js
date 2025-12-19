@@ -44,9 +44,17 @@ export const createBooking = async (req, res) => {
       !scheduledTime ||
       !estimatedHours
     ) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all required fields" });
+      return res.status(400).json({
+        message: "Please provide all required fields",
+        missing: {
+          workerId: !workerId,
+          serviceCategory: !serviceCategory,
+          description: !description,
+          scheduledDate: !scheduledDate,
+          scheduledTime: !scheduledTime,
+          estimatedHours: !estimatedHours,
+        },
+      });
     }
 
     // Check if worker exists and is approved

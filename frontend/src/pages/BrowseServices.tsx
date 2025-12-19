@@ -105,9 +105,13 @@ const BrowseServices = () => {
         workerId: selectedWorker._id,
         serviceCategory: bookingData.serviceCategory,
         description: bookingData.description,
-        scheduledDate: `${bookingData.scheduledDate}T${bookingData.scheduledTime}`,
-        address: bookingData.address,
+        scheduledDate: bookingData.scheduledDate,
+        scheduledTime: bookingData.scheduledTime,
+        serviceAddress: {
+          street: bookingData.address,
+        },
         estimatedHours: bookingData.estimatedHours,
+        paymentMethod: "stripe",
       });
 
       const booking = bookingResponse.data.data;
