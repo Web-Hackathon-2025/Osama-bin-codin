@@ -9,6 +9,7 @@ import workerRoutes from "./routes/workerRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +18,10 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// IMPORTANT: Webhook routes MUST come BEFORE express.json()
+// Stripe requires raw request body for signature verification
+app.use("/api/webhooks", webhookRoutes);
 
 // Middleware
 app.use(cors());
