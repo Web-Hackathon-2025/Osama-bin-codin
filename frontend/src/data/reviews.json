@@ -1,0 +1,22 @@
+[
+  {
+    "id": "rev-1",
+    "bookingId": "book-3",
+    "customerId": "cust-2",
+    "customerName": "Meera Iyer",
+    "providerId": "prov-3",
+    "rating": 5,
+    "comment": "Excellent service! Very thorough cleaning and professional behavior. Highly recommended!",
+    "createdAt": "2025-12-15T18:30:00Z"
+  },
+  {
+    "id": "rev-2",
+    "bookingId": "book-7",
+    "customerId": "cust-4",
+    "customerName": "Sneha Patel",
+    "providerId": "prov-4",
+    "rating": 4,
+    "comment": "Good quality work on the cabinets. Took a bit longer than expected but the finish is great.",
+    "createdAt": "2025-12-13T10:15:00Z"
+  }
+]

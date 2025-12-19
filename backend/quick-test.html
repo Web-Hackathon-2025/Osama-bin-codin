@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quick WebSocket Test</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial; padding: 40px; background: #f5f5f5; }
+    .box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+    button { background: #667eea; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px 0; }
+    button:hover { background: #5568d3; }
+    .log { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; font-size: 14px; max-height: 400px; overflow-y: auto; }
+    .success { color: #28a745; font-weight: bold; }
+    .error { color: #dc3545; font-weight: bold; }
+    .info { color: #007bff; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🚀 WebSocket Connection Test</h1>
+    <p>Click below to test WebSocket connection:</p>
+    
+    <button onclick="testConnection()">🔌 Connect to Server</button>
+    <button onclick="clearLog()">🗑️ Clear Log</button>
+    
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    let socket = null;
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+      logDiv.innerHTML += `<div class="${className}">[${time}] ${message}</div>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('log').innerHTML = '';
+    }
+
+    function testConnection() {
+      log('Starting connection test...', 'info');
+      log('Trying port 3000 first...', 'info');
+      
+      // Try port 3000 first
+      socket = io('http://localhost:3000', {
+        transports: ['websocket', 'polling'],
+        timeout: 5000
+      });
+
+      socket.on('connect', () => {
+        log('✅ CONNECTED SUCCESSFULLY!', 'success');
+        log(`Socket ID: ${socket.id}`, 'success');
+        log('WebSocket is working perfectly!', 'success');
+        
+        // Test sending a message
+        setTimeout(() => {
+          log('Testing message send...', 'info');
+          socket.emit('message:send', {
+            receiverId: 'test-receiver',
+            content: 'Test message!',
+            type: 'text'
+          }, (response) => {
+            if (response && response.success) {
+              log('✅ Message sent successfully!', 'success');
+            } else {
+              log('Message response: ' + JSON.stringify(response), 'info');
+            }
+          });
+        }, 1000);
+      });
+
+      socket.on('connect_error', (error) => {
+        log('❌ Connection to port 3000 failed: ' + error.message, 'error');
+        log('Trying port 5000 as fallback...', 'info');
+        
+        socket.close();
+        
+        // Try port 5000
+        socket = io('http://localhost:5000', {
+          transports: ['websocket', 'polling'],
+          timeout: 5000
+        });
+
+        socket.on('connect', () => {
+          log('✅ CONNECTED SUCCESSFULLY ON PORT 5000!', 'success');
+          log(`Socket ID: ${socket.id}`, 'success');
+        });
+
+        socket.on('connect_error', (err2) => {
+          log('❌ Connection to port 5000 also failed: ' + err2.message, 'error');
+          log('', 'error');
+          log('TROUBLESHOOTING:', 'error');
+          log('1. Make sure server is running: npm run dev', 'error');
+          log('2. Check server logs for errors', 'error');
+          log('3. Try running as Administrator', 'error');
+          log('4. Check Windows Firewall settings', 'error');
+        });
+      });
+
+      socket.on('disconnect', () => {
+        log('Disconnected from server', 'info');
+      });
+
+      socket.on('message:receive', (data) => {
+        log('📨 Received message: ' + data.message.content, 'success');
+      });
+    }
+
+    // Auto-test on page load
+    window.onload = () => {
+      log('Page loaded. Click "Connect to Server" button to test.', 'info');
+      log('Server should be running on port 3000 or 5000', 'info');
+    };
+  </script>
+</body>
+</html>

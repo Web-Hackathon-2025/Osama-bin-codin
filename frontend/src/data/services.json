@@ -1,0 +1,58 @@
+[
+  {
+    "id": "cat-1",
+    "name": "Plumber",
+    "icon": "wrench",
+    "description": "Pipe repairs, installations, and maintenance",
+    "image": "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400&h=300&fit=crop"
+  },
+  {
+    "id": "cat-2",
+    "name": "Electrician",
+    "icon": "zap",
+    "description": "Electrical repairs, wiring, and installations",
+    "image": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400&h=300&fit=crop"
+  },
+  {
+    "id": "cat-3",
+    "name": "Cleaner",
+    "icon": "sparkles",
+    "description": "Home and office cleaning services",
+    "image": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop"
+  },
+  {
+    "id": "cat-4",
+    "name": "Carpenter",
+    "icon": "hammer",
+    "description": "Furniture repair and woodwork",
+    "image": "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&h=300&fit=crop"
+  },
+  {
+    "id": "cat-5",
+    "name": "Painter",
+    "icon": "paint-bucket",
+    "description": "Interior and exterior painting",
+    "image": "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=400&h=300&fit=crop"
+  },
+  {
+    "id": "cat-6",
+    "name": "Tutor",
+    "icon": "graduation-cap",
+    "description": "Home tutoring for all subjects",
+    "image": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop"
+  },
+  {
+    "id": "cat-7",
+    "name": "AC Repair",
+    "icon": "wind",
+    "description": "AC installation, repair, and servicing",
+    "image": "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=400&h=300&fit=crop"
+  },
+  {
+    "id": "cat-8",
+    "name": "Pest Control",
+    "icon": "bug",
+    "description": "Professional pest control services",
+    "image": "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400&h=300&fit=crop"
+  }
+]
