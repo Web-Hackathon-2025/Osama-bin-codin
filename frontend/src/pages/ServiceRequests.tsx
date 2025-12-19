@@ -78,12 +78,12 @@ const ServiceRequests: React.FC = () => {
     try {
       if (modalType === "accept") {
         await bookingAPI.respondToBooking(selectedBooking._id, {
-          accept: true,
+          status: "accepted",
         });
         alert("Request accepted successfully!");
       } else if (modalType === "reject") {
         await bookingAPI.respondToBooking(selectedBooking._id, {
-          accept: false,
+          status: "rejected",
         });
         alert("Request rejected successfully!");
       }
