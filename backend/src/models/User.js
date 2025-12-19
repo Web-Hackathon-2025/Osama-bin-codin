@@ -32,9 +32,92 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    role: {
+      type: String,
+      enum: ["user", "worker", "admin"],
+      default: "user",
+      required: true,
+    },
+    // Worker-specific fields
+    workerProfile: {
+      jobCategories: [
+        {
+          type: String,
+          enum: [
+            "plumber",
+            "electrician",
+            "carpenter",
+            "painter",
+            "cleaner",
+            "gardener",
+            "mechanic",
+            "ac-technician",
+            "appliance-repair",
+            "pest-control",
+            "home-renovation",
+            "moving-services",
+            "other",
+          ],
+        },
+      ],
+      experience: {
+        type: Number, // in years
+        min: 0,
+      },
+      hourlyRate: {
+        type: Number,
+        min: 0,
+      },
+      skills: [
+        {
+          type: String,
+          trim: true,
+        },
+      ],
+      certifications: [
+        {
+          name: String,
+          issuedBy: String,
+          issuedDate: Date,
+        },
+      ],
+      availability: {
+        type: String,
+        enum: ["full-time", "part-time", "weekends", "flexible"],
+        default: "flexible",
+      },
+      serviceAreas: [
+        {
+          type: String,
+          trim: true,
+        },
+      ],
+      isApproved: {
+        type: Boolean,
+        default: false,
+      },
+      rating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5,
+      },
+      totalJobs: {
+        type: Number,
+        default: 0,
+      },
+      completedJobs: {
+        type: Number,
+        default: 0,
+      },
+    },
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     otp: {
       type: String,

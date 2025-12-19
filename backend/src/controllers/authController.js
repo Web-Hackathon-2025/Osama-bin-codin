@@ -17,7 +17,7 @@ const generateOTP = () => {
 // @access  Public
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role, phone, workerProfile } = req.body;
 
     // Validation
     if (!name || !email || !password) {
@@ -32,6 +32,26 @@ export const register = async (req, res) => {
         .json({ message: "Password must be at least 6 characters" });
     }
 
+    // Validate role
+    const validRoles = ["user", "worker", "admin"];
+    const userRole = role || "user";
+    if (!validRoles.includes(userRole)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    // Check if worker role requires worker profile
+    if (userRole === "worker") {
+      if (
+        !workerProfile ||
+        !workerProfile.jobCategories ||
+        workerProfile.jobCategories.length === 0
+      ) {
+        return res.status(400).json({
+          message: "Workers must provide at least one job category",
+        });
+      }
+    }
+
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -44,15 +64,34 @@ export const register = async (req, res) => {
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Create user
-    const user = await User.create({
+    // Create user data
+    const userData = {
       name,
       email,
       password,
+      role: userRole,
+      phone,
       otp,
       otpExpiry,
       isVerified: false,
-    });
+    };
+
+    // Add worker profile if role is worker
+    if (userRole === "worker" && workerProfile) {
+      userData.workerProfile = {
+        jobCategories: workerProfile.jobCategories,
+        experience: workerProfile.experience || 0,
+        hourlyRate: workerProfile.hourlyRate || 0,
+        skills: workerProfile.skills || [],
+        certifications: workerProfile.certifications || [],
+        availability: workerProfile.availability || "flexible",
+        serviceAreas: workerProfile.serviceAreas || [],
+        isApproved: false, // Workers need admin approval
+      };
+    }
+
+    // Create user
+    const user = await User.create(userData);
 
     // Send OTP email
     try {
@@ -69,6 +108,8 @@ export const register = async (req, res) => {
       message: "Registration successful! Please check your email for OTP",
       userId: user._id,
       email: user.email,
+      role: user.role,
+      requiresApproval: userRole === "worker",
     });
   } catch (error) {
     console.error("Register error:", error);
@@ -127,7 +168,9 @@ export const verifyOTP = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         isVerified: user.isVerified,
+        workerProfile: user.role === "worker" ? user.workerProfile : undefined,
       },
     });
   } catch (error) {
@@ -224,7 +267,10 @@ export const login = async (req, res) => {
         phone: user.phone,
         avatar: user.avatar,
         bio: user.bio,
+        role: user.role,
         isVerified: user.isVerified,
+        isActive: user.isActive,
+        workerProfile: user.role === "worker" ? user.workerProfile : undefined,
       },
     });
   } catch (error) {
