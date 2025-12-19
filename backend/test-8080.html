@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Port 8080 Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #1e1e1e; color: #fff; }
+        .status { padding: 20px; margin: 10px 0; border-radius: 5px; font-size: 18px; }
+        .success { background: #28a745; }
+        .error { background: #dc3545; }
+        button { padding: 15px 30px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔌 WebSocket Test - Port 8080</h1>
+    <button onclick="connectSocket()">Connect to Server</button>
+    <div id="status"></div>
+    
+    <script>
+        let socket;
+        
+        function log(msg, isError = false) {
+            const statusDiv = document.getElementById('status');
+            const time = new Date().toLocaleTimeString();
+            statusDiv.innerHTML = `<div class="status ${isError ? 'error' : 'success'}">[${time}] ${msg}</div>` + statusDiv.innerHTML;
+            console.log(`[${time}] ${msg}`);
+        }
+        
+        function connectSocket() {
+            log('🔄 Attempting connection to http://localhost:8080...');
+            
+            socket = io('http://localhost:8080', {
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                timeout: 10000
+            });
+            
+            socket.on('connect', () => {
+                log('✅ CONNECTED! Socket ID: ' + socket.id);
+                alert('✅ SUCCESS! Connection works!');
+            });
+            
+            socket.on('connect_error', (error) => {
+                log('❌ Connection error: ' + error.message, true);
+                alert('❌ Connection failed: ' + error.message);
+            });
+            
+            socket.on('disconnect', () => {
+                log('⚠️ Disconnected', true);
+            });
+        }
+    </script>
+</body>
+</html>

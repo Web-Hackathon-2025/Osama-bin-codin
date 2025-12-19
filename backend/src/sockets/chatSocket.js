@@ -21,13 +21,37 @@ export const initializeSocket = (io) => {
     // Handle sending a message
     socket.on('message:send', async (data, callback) => {
       try {
+        if (!data) {
+          const error = { success: false, error: 'Message data is required' };
+          if (callback) callback(error);
+          return;
+        }
+        
         const { receiverId, content, type = 'text', fileUrl } = data;
 
-        if (!receiverId || !content) {
-          return callback({ 
-            success: false, 
-            error: 'Receiver ID and content are required' 
+        // For broadcast messages (no specific receiver), send to all
+        if (!receiverId || receiverId === 'broadcast') {
+          socket.broadcast.emit('message:receive', {
+            _id: Date.now().toString(),
+            content,
+            sender: socket.user,
+            createdAt: new Date(),
+            type,
           });
+          
+          if (callback) {
+            callback({ 
+              success: true,
+              message: { content, type, createdAt: new Date() }
+            });
+          }
+          return;
+        }
+
+        if (!content) {
+          const error = { success: false, error: 'Content is required' };
+          if (callback) callback(error);
+          return;
         }
 
         // Find or create conversation
@@ -146,6 +170,15 @@ export const initializeSocket = (io) => {
 
     // Handle typing indicator
     socket.on('typing:start', (data) => {
+      // Broadcast to all users if no specific receiver
+      if (!data || !data.receiverId) {
+        socket.broadcast.emit('typing:start', {
+          userId,
+          userName: socket.user?.name || 'Anonymous',
+        });
+        return;
+      }
+      
       const { receiverId } = data;
       const receiverSocketId = activeUsers.get(receiverId);
       
@@ -158,6 +191,14 @@ export const initializeSocket = (io) => {
     });
 
     socket.on('typing:stop', (data) => {
+      // Broadcast to all users if no specific receiver
+      if (!data || !data.receiverId) {
+        socket.broadcast.emit('typing:stop', {
+          userId,
+        });
+        return;
+      }
+      
       const { receiverId } = data;
       const receiverSocketId = activeUsers.get(receiverId);
       
