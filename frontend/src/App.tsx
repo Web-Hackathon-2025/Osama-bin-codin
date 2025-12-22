@@ -4,10 +4,11 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { UserProvider } from "./context/UserContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ChatBox from "./components/ChatBox";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -30,14 +31,13 @@ import ServiceRequests from "./pages/ServiceRequests";
 import BookingHistory from "./pages/BookingHistory";
 import AdminDashboard from "./pages/AdminDashboard";
 
-function App() {
+function AppContent() {
+  const { user } = useAuth();
+
   return (
-    <AuthProvider>
-      <UserProvider>
-        <Router>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1">
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-1">
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Landing />} />
@@ -86,7 +86,18 @@ function App() {
               </Routes>
             </main>
             <Footer />
+            {/* Global Chat Widget - only show for authenticated users */}
+            {user && <ChatBox />}
           </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <UserProvider>
+        <Router>
+          <AppContent />
         </Router>
       </UserProvider>
     </AuthProvider>

@@ -28,7 +28,7 @@ export interface ServiceCategory {
 }
 
 // Booking Status
-export type BookingStatus = 'requested' | 'confirmed' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending' | 'accepted' | 'rejected' | 'in-progress' | 'completed' | 'cancelled';
 
 // Booking
 export interface Booking {

@@ -33,7 +33,6 @@ export default function ChatBox({
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [userId, setUserId] = useState('');
   const [typing, setTyping] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -66,15 +65,18 @@ export default function ChatBox({
   const connectSocket = () => {
     if (socket?.connected) return;
 
+    // Get auth token from localStorage
+    const token = localStorage.getItem('token');
+    
     const newSocket = io(serverUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
+      auth: token ? { token } : undefined,
     });
 
     newSocket.on('connect', () => {
       console.log('✅ ChatBox connected');
       setConnected(true);
-      setUserId(newSocket.id || '');
     });
 
     newSocket.on('disconnect', () => {
@@ -158,7 +160,6 @@ export default function ChatBox({
 
   const isDark = theme === 'dark';
   const bgColor = isDark ? 'bg-gray-800' : 'bg-white';
-  const textColor = isDark ? 'text-white' : 'text-gray-800';
   const borderColor = isDark ? 'border-gray-700' : 'border-gray-200';
 
   if (!isOpen) {

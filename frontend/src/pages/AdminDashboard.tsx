@@ -9,7 +9,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { adminAPI } from "../services/api";
-import type { ServiceProvider, Review, User, Report } from "../types";
 
 interface ApiUser {
   _id: string;

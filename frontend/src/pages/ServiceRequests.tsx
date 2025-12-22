@@ -27,7 +27,7 @@ interface Booking {
   serviceAddress?: any;
   estimatedHours: number;
   totalAmount: number;
-  status: string;
+  status: 'pending' | 'accepted' | 'in-progress' | 'completed' | 'cancelled' | 'rejected';
   paymentStatus: string;
   paymentMethod: string;
   createdAt: string;
@@ -80,12 +80,12 @@ const ServiceRequests: React.FC = () => {
     try {
       if (modalType === "accept") {
         await bookingAPI.respondToBooking(selectedBooking._id, {
-          status: "accepted",
+          action: "accept",
         });
         alert("Request accepted successfully!");
       } else if (modalType === "reject") {
         await bookingAPI.respondToBooking(selectedBooking._id, {
-          status: "rejected",
+          action: "reject",
         });
         alert("Request rejected successfully!");
       }

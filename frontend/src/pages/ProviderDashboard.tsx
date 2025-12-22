@@ -5,7 +5,6 @@ import {
   CheckCircle,
   Package,
   DollarSign,
-  TrendingUp,
   Calendar,
   CreditCard,
   AlertTriangle,

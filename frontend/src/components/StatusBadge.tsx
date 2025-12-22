@@ -10,21 +10,37 @@ interface StatusBadgeProps {
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' }) => {
   const getStatusConfig = () => {
     switch (status) {
-      case 'requested':
+      case 'pending':
         return {
-          label: 'Requested',
+          label: 'Pending',
           icon: Clock,
           bgColor: 'bg-gradient-to-r from-warning-100 to-yellow-100',
           textColor: 'text-warning-800',
           borderColor: 'border-warning-300',
         };
-      case 'confirmed':
+      case 'accepted':
         return {
-          label: 'Confirmed',
+          label: 'Accepted',
           icon: CheckCircle,
           bgColor: 'bg-gradient-to-r from-success-100 to-green-100',
           textColor: 'text-success-800',
           borderColor: 'border-success-300',
+        };
+      case 'rejected':
+        return {
+          label: 'Rejected',
+          icon: XCircle,
+          bgColor: 'bg-gradient-to-r from-orange-100 to-orange-200',
+          textColor: 'text-orange-800',
+          borderColor: 'border-orange-300',
+        };
+      case 'in-progress':
+        return {
+          label: 'In Progress',
+          icon: Clock,
+          bgColor: 'bg-gradient-to-r from-blue-100 to-blue-200',
+          textColor: 'text-blue-800',
+          borderColor: 'border-blue-300',
         };
       case 'completed':
         return {

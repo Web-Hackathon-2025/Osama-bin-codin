@@ -14,7 +14,7 @@ interface Booking {
   estimatedHours: number;
   totalAmount: number;
   workerAmount?: number;
-  status: string;
+  status: 'pending' | 'accepted' | 'in-progress' | 'completed' | 'cancelled' | 'rejected';
   paymentStatus: string;
   paymentMethod: string;
   createdAt: string;
@@ -176,7 +176,7 @@ const BookingHistory: React.FC = () => {
           <div className="space-y-4">
             {sortedBookings.map((booking) => (
               <div
-                key={booking.id}
+                key={booking._id}
                 className="bg-white rounded-xl shadow-md p-6"
               >
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">

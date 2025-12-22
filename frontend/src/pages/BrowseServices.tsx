@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { workerAPI, bookingAPI } from "../services/api";
-import { loadStripe } from "@stripe/stripe-js";
 
 interface Worker {
   _id: string;
@@ -147,8 +146,6 @@ const BrowseServices = () => {
       const bookingResponse = await bookingAPI.createBooking(bookingPayload);
 
       console.log("✅ Booking response:", bookingResponse.data);
-
-      const booking = bookingResponse.data.booking;
 
       // If cash payment, just show success and redirect
       if (bookingData.paymentMethod === "cash") {

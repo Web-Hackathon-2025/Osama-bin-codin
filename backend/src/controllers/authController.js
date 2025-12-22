@@ -19,14 +19,25 @@ export const register = async (req, res) => {
   try {
     const { name, email, password, role, phone, workerProfile } = req.body;
 
+    console.log('📝 Registration attempt:', { name, email, role, hasWorkerProfile: !!workerProfile });
+
     // Validation
     if (!name || !email || !password) {
+      console.log('❌ Missing required fields');
       return res
         .status(400)
         .json({ message: "Please provide all required fields" });
     }
 
+    if (!phone) {
+      console.log('❌ Missing phone number');
+      return res
+        .status(400)
+        .json({ message: "Phone number is required" });
+    }
+
     if (password.length < 6) {
+      console.log('❌ Password too short');
       return res
         .status(400)
         .json({ message: "Password must be at least 6 characters" });
@@ -36,6 +47,7 @@ export const register = async (req, res) => {
     const validRoles = ["user", "worker", "admin"];
     const userRole = role || "user";
     if (!validRoles.includes(userRole)) {
+      console.log('❌ Invalid role:', userRole);
       return res.status(400).json({ message: "Invalid role" });
     }
 
@@ -46,10 +58,12 @@ export const register = async (req, res) => {
         !workerProfile.jobCategories ||
         workerProfile.jobCategories.length === 0
       ) {
+        console.log('❌ Missing worker profile or job categories');
         return res.status(400).json({
           message: "Workers must provide at least one job category",
         });
       }
+      console.log('✅ Worker profile valid:', workerProfile.jobCategories);
     }
 
     // Check if user already exists
@@ -91,12 +105,17 @@ export const register = async (req, res) => {
     }
 
     // Create user
+    console.log('💾 Creating user with data:', { role: userData.role, hasWorkerProfile: !!userData.workerProfile });
     const user = await User.create(userData);
+    console.log('✅ User created:', user._id);
 
     // Send OTP email
     try {
+      console.log('📧 Sending OTP email to:', email);
       await sendOTPEmail(email, otp, name);
+      console.log('✅ OTP email sent successfully');
     } catch (error) {
+      console.error('❌ Email send failed:', error.message);
       // Delete user if email fails
       await User.findByIdAndDelete(user._id);
       return res
@@ -104,6 +123,7 @@ export const register = async (req, res) => {
         .json({ message: "Failed to send verification email" });
     }
 
+    console.log('✅ Registration complete');
     res.status(201).json({
       message: "Registration successful! Please check your email for OTP",
       userId: user._id,
@@ -112,8 +132,10 @@ export const register = async (req, res) => {
       requiresApproval: userRole === "worker",
     });
   } catch (error) {
-    console.error("Register error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("❌ Register error:", error);
+    console.error("Error details:", error.message);
+    console.error("Stack:", error.stack);
+    res.status(500).json({ message: error.message || "Registration failed" });
   }
 };
 
